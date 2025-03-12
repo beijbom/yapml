@@ -1,3 +1,10 @@
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "I"]
+
+[tool.black]
+line-length = 120
+
 [project]
 name = "yamlp"
 version = "0.1.0"
@@ -5,7 +12,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "black>=25.1.0",
     "modal>=0.73.67",
+    "pillow>=11.1.0",
     "python-fasthtml>=0.12.1",
-    "supabase>=2.13.0",
+    "requests>=2.32.3",
+    "ruff>=0.9.7",
+    "sqlmodel>=0.0.24",
 ]
