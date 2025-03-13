@@ -12,10 +12,12 @@ An open-source full-stack Machine Learning Platform build on Modal.
 
 ### Run dev server
 
-`uv run modal serve yamlp.py`
+`uv run modal serve -m src.yamlp.yamlp`
 
 ### Deploy to prod
 
-`uv run modal deploy yamlp.py`
+`uv run modal deploy -m src.yamlp.yamlp`
 
-## Todo
+### Run tests
+
+`uv run pytest`

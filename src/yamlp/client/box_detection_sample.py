@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-from datamodel import BoundingBox, ImageDetectionSample
+from yamlp.datamodel import BoundingBox, ImageDetectionSample
 
 
 def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200):

@@ -1,5 +1,3 @@
-import os
-import time
 from datetime import datetime, timedelta
 from io import BytesIO
 
@@ -7,8 +5,8 @@ import requests
 from PIL import Image as PILImage
 from sqlmodel import Session, create_engine
 
-from config import image_dir, sqlite_url
-from datamodel import BoundingBox, Image
+from yamlp.config import image_dir, sqlite_url
+from yamlp.datamodel import BoundingBox, Image
 
 
 def populate_db() -> None:

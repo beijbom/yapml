@@ -3,33 +3,29 @@ from pathlib import Path
 from typing import Optional
 
 import fasthtml.common as fh
-import modal
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, SQLModel, create_engine, select
 
-import client
-import datamodel
-from config import favicon_path, sqlite_url
-from fixtures import populate_db
-
-web_app = FastAPI()
-app = modal.App(name="yamlp")
-volume = modal.Volume.from_name("YAMLP", create_if_missing=True)
-
-
-modal_image = (
-    modal.Image.debian_slim()
-    .apt_install(["libgl1-mesa-glx", "libglib2.0-0"])
-    .pip_install_from_pyproject("pyproject.toml")
-    .add_local_python_source("datamodel", "config", "fixtures", "client")
-    .add_local_dir("static", remote_path="/static")
-)
+import yamlp.client as client
+import yamlp.datamodel as datamodel
+from yamlp.config import favicon_path, sqlite_url
+from yamlp.fixtures import populate_db
 
 engine = create_engine(sqlite_url, echo=True)
+
+
+def get_session():
+
+    with Session(engine) as session:
+        yield session
+
+
+web_app = FastAPI()
+router = APIRouter(prefix="/api", dependencies=[Depends(get_session)])
 
 
 @web_app.get("/")
@@ -59,17 +55,32 @@ class BoxUpdate(BaseModel):
     width: Optional[float] = None
     height: Optional[float] = None
     label_name: Optional[str] = None
+    annotator_name: Optional[str] = None
 
 
-@web_app.put("/api/boxes/{box_id}")
-def update_box(box_id: int, update_data: BoxUpdate):
-    with Session(engine) as session:
-        box = session.get(datamodel.BoundingBox, box_id)
-        if not box:
-            raise HTTPException(status_code=404, detail="Box not found")
+@router.put("/boxes/{box_id}")
+def update_box(box_id: int, update_data: BoxUpdate, session: Session = Depends(get_session)) -> datamodel.BoundingBox:
+    print(f"Updating box {box_id} with {update_data}")
+    print(f"Getting box {box_id} from {engine.url}")
+    box = session.get(datamodel.BoundingBox, box_id)
+    print(f"Got box: {box}")
+    if not box:
+        raise HTTPException(status_code=404, detail="Box not found")
 
-        # Don't update the box. Create a new one that points to the previous box.
-        # TODO.
+    new_box = datamodel.BoundingBox(
+        image_id=box.image_id,
+        previous_box_id=box.id,
+        center_x=update_data.center_x if update_data.center_x else box.center_x,
+        center_y=update_data.center_y if update_data.center_y else box.center_y,
+        width=update_data.width if update_data.width else box.width,
+        height=update_data.height if update_data.height else box.height,
+        label_name=update_data.label_name if update_data.label_name else box.label_name,
+        annotator_name=update_data.annotator_name if update_data.annotator_name else box.annotator_name,
+    )
+    session.add(new_box)
+    session.commit()
+    session.refresh(new_box)
+    return new_box
 
 
 @web_app.get("/api/samples")
@@ -77,7 +88,6 @@ async def get_samples() -> list[datamodel.ImageDetectionSample]:
     with Session(engine) as session:
         query = select(datamodel.Image).options(selectinload(datamodel.Image.boxes))
         results = session.exec(query).all()
-        print(results)
         image_detection_samples = [
             datamodel.ImageDetectionSample(
                 image_url=f"/images/{image.filename}",
@@ -140,8 +150,4 @@ async def reset_db() -> HTMLResponse:
     return "<h1>Database was reset.</h1>"
 
 
-@app.function(image=modal_image, container_idle_timeout=60, volumes={"/data": volume})
-@modal.asgi_app()
-def index() -> FastAPI:
-    web_app.mount("/images", StaticFiles(directory="/data/images"), name="images")
-    return web_app
+web_app.include_router(router)
