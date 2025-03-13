@@ -54,7 +54,7 @@ def sample_history(boxes: list[BoundingBox]):
             *[
                 fh.Li(
                     fh.P(
-                        f"ID: {box.id}, Created: {box.created_at}, Center X: {box.center_x:.2f}, Center Y: {box.center_y:.2f}, Width: {box.width:.2f}, Height: {box.height:.2f}, Label: {box.label_name}, Annotator: {box.annotator_name}",
+                        f"ID: {box.id} (Previous: {box.previous_box_id}), Created: {box.created_at}, Center X: {box.center_x:.2f}, Center Y: {box.center_y:.2f}, Width: {box.width:.2f}, Height: {box.height:.2f}, Label: {box.label_name}, Annotator: {box.annotator_name}",
                     )
                 )
                 for box in boxes

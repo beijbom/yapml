@@ -68,12 +68,8 @@ def update_box(box_id: int, update_data: BoxUpdate):
         if not box:
             raise HTTPException(status_code=404, detail="Box not found")
 
-        # Update only provided fields
-        for field, value in update_data.dict(exclude_unset=True).items():
-            setattr(box, field, value)
-
-        session.commit()
-        return box
+        # Don't update the box. Create a new one that points to the previous box.
+        # TODO.
 
 
 @web_app.get("/api/samples")
