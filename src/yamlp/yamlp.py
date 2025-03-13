@@ -2,7 +2,7 @@ import modal
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from yamlp.webapp import web_app
+from yamlp.server.webapp import web_app
 
 app = modal.App(name="yamlp")
 volume = modal.Volume.from_name("YAMLP", create_if_missing=True)

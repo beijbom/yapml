@@ -1,9 +1,11 @@
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
-from yamlp.webapp import get_session, web_app
+from yamlp.db import get_session
+from yamlp.server.webapp import web_app
 
 
 @pytest.fixture(scope="session")
@@ -29,7 +31,8 @@ def test_session(test_engine):
 def client(test_session):
     """Create a test client with the test database session"""
 
-    def override_get_session():
+    def override_get_session(request: Request):  # FastAPI Request here
+        request.state.session = test_session
         yield test_session
 
     web_app.dependency_overrides[get_session] = override_get_session

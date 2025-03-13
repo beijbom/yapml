@@ -25,7 +25,7 @@ def test_update_box(client, test_box):
     """Test updating a box"""
     update_data = {"center_x": 0.5, "center_y": 0.6, "width": 0.2, "height": 0.3, "label_name": "dog"}
 
-    response = client.put(f"/api/boxes/{test_box.id}", json=update_data)
+    response = client.put(f"/api/v1/boxes/{test_box.id}", json=update_data)
     assert response.status_code == 200
 
     data = response.json()
