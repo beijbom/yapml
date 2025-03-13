@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-from datamodel import ImageDetectionSample
+from datamodel import BoundingBox, ImageDetectionSample
 
 
 def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200):
@@ -46,3 +46,18 @@ def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200
 
 def image_list(samples: list[ImageDetectionSample]):
     return fh.Div(*[image_card(sample) for sample in samples])
+
+
+def sample_history(boxes: list[BoundingBox]):
+    return fh.Div(
+        fh.Ul(
+            *[
+                fh.Li(
+                    fh.P(
+                        f"ID: {box.id}, Created: {box.created_at}, Center X: {box.center_x:.2f}, Center Y: {box.center_y:.2f}, Width: {box.width:.2f}, Height: {box.height:.2f}, Label: {box.label_name}, Annotator: {box.annotator_name}",
+                    )
+                )
+                for box in boxes
+            ]
+        ),
+    )

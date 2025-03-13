@@ -15,6 +15,7 @@ class BoundingBox(SQLModel, table=True):
     annotator_name: str
     image_id: int = Field(foreign_key="image.id")
     created_at: datetime = Field(default_factory=datetime.now)
+    previous_box_id: Optional[int] = Field(default=None, foreign_key="boundingbox.id", unique=True)
     image: "Image" = Relationship(back_populates="boxes")
 
 
@@ -32,3 +33,8 @@ class ImageDetectionSample(BaseModel):
     image_width: int
     image_height: int
     boxes: list[BoundingBox]
+
+
+def suppress_stale_boxes(boxes: list[BoundingBox]) -> list[BoundingBox]:
+    stale_box_ides = set([box.previous_box_id for box in boxes if box.previous_box_id is not None])
+    return [box for box in boxes if box.id not in stale_box_ides]

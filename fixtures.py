@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime, timedelta
 from io import BytesIO
 
 import requests
@@ -56,7 +58,20 @@ def populate_db() -> None:
             label_name="dog",
             image_id=image2.id,
             annotator_name="alice",
+            created_at=datetime.now() - timedelta(days=10),
         )
 
         session.add_all([box1, box2, box3])
+        session.commit()
+        box4 = BoundingBox(
+            center_x=0.8,
+            center_y=0.8,
+            width=0.2,
+            height=0.1,
+            label_name="dog",
+            image_id=image2.id,
+            annotator_name="alice",
+            previous_box_id=box3.id,
+        )
+        session.add(box4)
         session.commit()
