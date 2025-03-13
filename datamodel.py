@@ -25,6 +25,7 @@ class Image(SQLModel, table=True):
     width: int
     height: int
     created_at: datetime = Field(default_factory=datetime.now)
+    deleted_at: Optional[datetime] = Field(default=None)
     boxes: list[BoundingBox] = Relationship(back_populates="image")
 
 
