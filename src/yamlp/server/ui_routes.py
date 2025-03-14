@@ -30,21 +30,12 @@ async def samples_list_page(request: Request) -> HTMLResponse:
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
 
-    # Check if this is an HTMX request
     is_htmx = request.headers.get("HX-Request") == "true"
 
     if is_htmx:
-        print("HTMX request")
-        # For HTMX requests, just return the grid content
-        grid_content = fh.Div(
-            {"class": "grid", "id": "content-grid"},
-            client.render_image_card(sample),
-            client.render_sample_history(list(sample.boxes)),
-        )
+        grid_content = client.render_sample_page_content(sample)
         return HTMLResponse(fh.to_xml(grid_content))
-
     else:
-        print("Full page request")
         page = client.render_sample_page(sample)
         return HTMLResponse(fh.to_xml(page))
 
