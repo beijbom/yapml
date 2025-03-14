@@ -177,6 +177,9 @@ async function updateBoxPosition() {
         
         if (!response.ok) {
             console.error('Failed to update box position');
+        } else {
+            // Add a flag to prevent immediate refresh from overwriting changes
+            window.lastBoxUpdateTime = Date.now();
         }
     } catch (error) {
         console.error('Error updating box position:', error);
@@ -320,9 +323,7 @@ def render_sample_page_content(sample: Image) -> fh.Html:
 def render_sample_page(sample: Image) -> fh.Html:
 
     content = render_sample_page_content(sample)
-    content.set("hx-get", f"/samples/{sample.id}")
-    content.set("hx-trigger", "every 3s")
-    content.set("hx-swap", "innerHTML")
+    content[0].attrs.update({"hx-get": f"/samples/{sample.id}", "hx-trigger": "every 3s", "hx-swap": "innerHTML"})
     page = fh.Html(
         fh.Head(
             fh.Title("Sample image page"),
@@ -338,6 +339,18 @@ def render_sample_page(sample: Image) -> fh.Html:
                 content,
                 fh.Script(
                     """
+                    // Initialize a variable to track the last box update time
+                    window.lastBoxUpdateTime = 0;
+                    
+                    // Add a filter to prevent HTMX refreshes right after box updates
+                    document.addEventListener('htmx:beforeRequest', function(event) {
+                        // If this is an auto-refresh and we recently updated a box, cancel the request
+                        if (event.detail.triggerSpec.includes('every 3s') && 
+                            Date.now() - window.lastBoxUpdateTime < 2000) {
+                            event.preventDefault();
+                        }
+                    });
+                    
                     document.addEventListener('htmx:afterSwap', function(event) {
                         if (typeof initializeDraggable === 'function') {
                             initializeDraggable();
