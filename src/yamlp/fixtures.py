@@ -5,7 +5,7 @@ import requests
 from PIL import Image as PILImage
 from sqlmodel import Session, create_engine
 
-from yamlp.config import image_dir, sqlite_url
+from yamlp.config import image_dir, image_url_prefix, sqlite_url
 from yamlp.datamodel import BoundingBox, Image
 
 
@@ -24,8 +24,8 @@ def populate_db() -> None:
 
     with Session(engine) as session:
         # First transaction: Add images
-        image1 = Image(filename="test1.jpg", width=500, height=500)
-        image2 = Image(filename="test2.jpg", width=500, height=500)
+        image1 = Image(filename="test1.jpg", width=500, height=500, url=f"{image_url_prefix}/test1.jpg")
+        image2 = Image(filename="test2.jpg", width=500, height=500, url=f"{image_url_prefix}/test2.jpg")
         session.add_all([image1, image2])
         session.commit()
 
