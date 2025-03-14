@@ -29,8 +29,24 @@ async def samples_list_page(request: Request) -> HTMLResponse:
 @router.get("/samples/{image_id}")
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
-    page = client.render_sample_page(sample)
-    return HTMLResponse(fh.to_xml(page))
+
+    # Check if this is an HTMX request
+    is_htmx = request.headers.get("HX-Request") == "true"
+
+    if is_htmx:
+        print("HTMX request")
+        # For HTMX requests, just return the grid content
+        grid_content = fh.Div(
+            {"class": "grid", "id": "content-grid"},
+            client.render_image_card(sample),
+            client.render_sample_history(list(sample.boxes)),
+        )
+        return HTMLResponse(fh.to_xml(grid_content))
+
+    else:
+        print("Full page request")
+        page = client.render_sample_page(sample)
+        return HTMLResponse(fh.to_xml(page))
 
 
 @router.get("/favicon.ico", include_in_schema=False)

@@ -311,12 +311,32 @@ def render_sample_page(sample: Image) -> fh.Html:
             fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
+            fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
-                fh.Div({"class": "grid"}, card, history),
+                fh.Div(
+                    {
+                        "class": "grid",
+                        "id": "content-grid",
+                        "hx-get": f"/samples/{sample.id}",
+                        "hx-trigger": "every 3s",
+                        "hx-swap": "innerHTML",
+                    },
+                    card,
+                    history,
+                ),
+                fh.Script(
+                    """
+                    document.addEventListener('htmx:afterSwap', function(event) {
+                        if (typeof initializeDraggable === 'function') {
+                            initializeDraggable();
+                        }
+                    });
+                """
+                ),
             )
         ),
     )
