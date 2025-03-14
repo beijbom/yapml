@@ -15,21 +15,21 @@ router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 @router.get("/")
 async def homepage(request: Request) -> HTMLResponse:
     samples = await get_samples(request)
-    page = fh.Html(fh.Head(fh.Title("Yet Another ML Platform")), client.image_list(samples))
+    page = client.render_sample_list_page(samples)
+    return HTMLResponse(fh.to_xml(page))
+
+
+@router.get("/samples")
+async def samples_list_page(request: Request) -> HTMLResponse:
+    samples = await get_samples(request)
+    page = client.render_sample_list_page(samples)
     return HTMLResponse(fh.to_xml(page))
 
 
 @router.get("/samples/{image_id}")
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
-    session = request.state.session
-    query = select(BoundingBox).where(BoundingBox.image_id == image_id)
-    boxes = session.exec(query).all()
-    sample_history = client.sample_history(list(boxes))
     sample = await get_sample(request, image_id)
-    card = client.image_card(sample, width=200, height=200)
-
-    page = client.sample_page(card, sample_history)
-
+    page = client.render_sample_page(sample)
     return HTMLResponse(fh.to_xml(page))
 
 

@@ -5,42 +5,26 @@ from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from yamlp.datamodel import BoundingBox, Image, ImageDetectionSample, suppress_stale_boxes
+from yamlp.datamodel import BoundingBox, Image, suppress_stale_boxes
 from yamlp.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 
 
 @router.get("/samples")
-async def get_samples(request: Request) -> list[ImageDetectionSample]:
+async def get_samples(request: Request) -> list[Image]:
     session = request.state.session
 
     query = select(Image).options(selectinload(Image.boxes))
     results = session.exec(query).all()
-    image_detection_samples = [
-        ImageDetectionSample(
-            image_url=f"/images/{image.filename}",
-            image_width=image.width,
-            image_height=image.height,
-            boxes=suppress_stale_boxes(list(image.boxes)),
-        )
-        for image in results
-    ]
-
-    return image_detection_samples
+    return results
 
 
 @router.get("/samples/{image_id}")
-async def get_sample(request: Request, image_id: int) -> ImageDetectionSample:
+async def get_sample(request: Request, image_id: int) -> Image:
     session = request.state.session
-    image = session.exec(select(Image).where(Image.id == image_id)).one()
-    boxes = session.exec(select(BoundingBox).where(BoundingBox.image_id == image_id)).all()
-    return ImageDetectionSample(
-        image_url=f"/images/{image.filename}",
-        image_width=image.width,
-        image_height=image.height,
-        boxes=suppress_stale_boxes(list(boxes)),
-    )
+    image = session.get(Image, image_id)
+    return image
 
 
 # Define the update schema

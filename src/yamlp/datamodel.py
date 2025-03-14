@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -22,18 +21,12 @@ class BoundingBox(SQLModel, table=True):
 class Image(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
+    url: str
     width: int
     height: int
     created_at: datetime = Field(default_factory=datetime.now)
     deleted_at: Optional[datetime] = Field(default=None)
     boxes: list[BoundingBox] = Relationship(back_populates="image")
-
-
-class ImageDetectionSample(BaseModel):
-    image_url: str
-    image_width: int
-    image_height: int
-    boxes: list[BoundingBox]
 
 
 def suppress_stale_boxes(boxes: list[BoundingBox]) -> list[BoundingBox]:

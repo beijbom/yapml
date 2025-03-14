@@ -1,6 +1,8 @@
+from contextlib import redirect_stderr
+
 import fasthtml.common as fh
 
-from yamlp.datamodel import BoundingBox, ImageDetectionSample
+from yamlp.datamodel import BoundingBox, Image, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -184,8 +186,17 @@ async function updateBoxPosition() {
 document.addEventListener('DOMContentLoaded', initializeDraggable);
 """
 
+DRAG_STYLE = """
+.draggable-box:hover { 
+    border-color: orange !important;
+}
+.resize-handle {
+    z-index: 20;
+}
+"""
 
-def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200) -> fh.Div:
+
+def render_image_card(sample: Image, max_width: int = 500, max_height: int = 500) -> fh.Div:
     """
     Render an image with draggable and resizable bounding boxes.
 
@@ -197,17 +208,15 @@ def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200
     Returns:
         A div containing the image and interactive boxes
     """
-    boxes = sample.boxes
-    image_url = sample.image_url
 
     # Create box HTML directly to avoid issues with fh.Div
     box_html = ""
-    for box in boxes:
+    for box in suppress_stale_boxes(sample.boxes):
         # Calculate positions in pixels
-        x = box.center_x * width
-        y = box.center_y * height
-        w = box.width * width
-        h = box.height * height
+        x = box.center_x * max_width
+        y = box.center_y * max_height
+        w = box.width * max_width
+        h = box.height * max_height
         left = x - w / 2
         top = y - h / 2
 
@@ -215,8 +224,8 @@ def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200
         box_html += f"""
         <div class="draggable-box" 
              data-box-id="{box.id}"
-             data-image-width="{width}"
-             data-image-height="{height}"
+             data-image-width="{max_width}"
+             data-image-height="{max_height}"
              data-width="{box.width}"
              data-height="{box.height}"
              data-label="{box.label_name}"
@@ -239,9 +248,9 @@ def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200
         """
 
     # Create the parent container with the image
-    parent_div = fh.Div(style=f"position:relative; width:{width}px; height:{height}px;")
+    parent_div = fh.Div(style=f"position:relative; width:{max_width}px; height:{max_height}px;")
 
-    img = fh.Img(src=f"{image_url}", style=f"width:{width}px; height:{height}px;")
+    img = fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;")
 
     # Add raw HTML for boxes
     raw_html = fh.NotStr(box_html)
@@ -249,11 +258,7 @@ def image_card(sample: ImageDetectionSample, width: int = 200, height: int = 200
     return parent_div(img, raw_html)
 
 
-def image_list(samples: list[ImageDetectionSample]):
-    return fh.Div(*[image_card(sample) for sample in samples])
-
-
-def sample_history(boxes: list[BoundingBox]):
+def render_sample_history(boxes: list[BoundingBox]):
     return fh.Div(
         fh.Ul(
             *[
@@ -268,28 +273,50 @@ def sample_history(boxes: list[BoundingBox]):
     )
 
 
-def sample_page(image_card: fh.Div, history: fh.Div) -> fh.Html:
+def render_sample_list_page(samples: list[Image]):
+
+    page = fh.Html(
+        fh.Head(
+            fh.Title("Yet Another ML Platform"),
+            fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
+            fh.Style(DRAG_STYLE),
+            fh.Script(DRAG_SCRIPT),
+        ),
+        fh.Body(
+            fh.Main(
+                {"class": "container"},
+                fh.H1("Yet Another ML Platform"),
+                fh.Div(
+                    {"class": "grid"},
+                    *[
+                        fh.A(
+                            {"href": f"/samples/{sample.id}", "style": "text-decoration:none;"},
+                            render_image_card(sample),
+                        )
+                        for sample in samples
+                    ],
+                ),
+            )
+        ),
+    )
+    return page
+
+
+def render_sample_page(sample: Image) -> fh.Html:
+    history = render_sample_history(list(sample.boxes))
+    card = render_image_card(sample)
     page = fh.Html(
         fh.Head(
             fh.Title("Sample image page"),
             fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
-            fh.Style(
-                """
-                .draggable-box:hover { 
-                    border-color: orange !important;
-                }
-                .resize-handle {
-                    z-index: 20;
-                }
-            """
-            ),
+            fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
         ),
         fh.Body(
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
-                fh.Div({"class": "grid"}, image_card, history),
+                fh.Div({"class": "grid"}, card, history),
             )
         ),
     )
