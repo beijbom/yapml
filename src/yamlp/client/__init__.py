@@ -1,3 +1,13 @@
-from .render_samples import render_sample_list_page, render_sample_page, render_sample_page_content
+from .render_samples import (
+    render_sample_history,
+    render_sample_list_page,
+    render_sample_page,
+    render_sample_page_content,
+)
 
-__all__ = ["render_sample_list_page", "render_sample_page", "render_sample_page_content"]
+__all__ = [
+    "render_sample_list_page",
+    "render_sample_page",
+    "render_sample_page_content",
+    "render_sample_history",
+]
