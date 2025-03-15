@@ -178,8 +178,14 @@ async function updateBoxPosition() {
         if (!response.ok) {
             console.error('Failed to update box position');
         } else {
-            // Add a flag to prevent immediate refresh from overwriting changes
-            window.lastBoxUpdateTime = Date.now();
+            // Get the updated box ID from the response and update the element
+            const result = await response.json();
+            if (result && result.id) {
+                currentBox.dataset.boxId = result.id;
+            }
+            
+            // Trigger HTMX to refresh the history section
+            document.body.dispatchEvent(new CustomEvent('boxUpdated'));
         }
     } catch (error) {
         console.error('Error updating box position:', error);
@@ -261,8 +267,14 @@ def render_image_card(sample: Image, max_width: int = 500, max_height: int = 500
     return parent_div(img, raw_html)
 
 
-def render_sample_history(boxes: list[BoundingBox]):
+def render_sample_history(boxes: list[BoundingBox], sample_id: int):
     return fh.Div(
+        {
+            "id": "history-section",
+            "hx-get": f"/samples/{sample_id}/history",
+            "hx-trigger": "boxUpdated from:body",
+            "hx-swap": "outerHTML",
+        },
         fh.Ul(
             *[
                 fh.Li(
@@ -312,7 +324,7 @@ def render_sample_list_page(samples: list[Image]):
 
 
 def render_sample_page_content(sample: Image) -> fh.Html:
-    history = render_sample_history(list(sample.boxes))
+    history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
     return (
         fh.Div(
@@ -335,6 +347,7 @@ def render_sample_page(sample: Image) -> fh.Html:
             fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
+            fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),  # Add HTMX
         ),
         fh.Body(
             fh.Main(

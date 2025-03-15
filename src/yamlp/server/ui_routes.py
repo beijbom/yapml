@@ -33,6 +33,12 @@ async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     return HTMLResponse(fh.to_xml(page))
 
 
+@router.get("/samples/{sample_id}/history")
+async def get_history(request: Request, sample_id: int) -> HTMLResponse:
+    sample = await get_sample(request, sample_id)
+    return HTMLResponse(fh.to_xml(client.render_sample_history(list(sample.boxes), sample_id)))
+
+
 @router.get("/favicon.ico", include_in_schema=False)
 async def favicon() -> FileResponse:
     return FileResponse(favicon_path)
