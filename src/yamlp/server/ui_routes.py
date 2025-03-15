@@ -29,15 +29,8 @@ async def samples_list_page(request: Request) -> HTMLResponse:
 @router.get("/samples/{image_id}")
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
-
-    is_htmx = request.headers.get("HX-Request") == "true"
-
-    if is_htmx:
-        grid_content = client.render_sample_page_content(sample)
-        return HTMLResponse(fh.to_xml(grid_content))
-    else:
-        page = client.render_sample_page(sample)
-        return HTMLResponse(fh.to_xml(page))
+    page = client.render_sample_page(sample)
+    return HTMLResponse(fh.to_xml(page))
 
 
 @router.get("/favicon.ico", include_in_schema=False)
