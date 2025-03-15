@@ -323,24 +323,10 @@ def render_sample_list_page(samples: list[Image]):
     return page
 
 
-def render_sample_page_content(sample: Image) -> fh.Html:
+def render_sample_page(sample: Image) -> fh.Html:
     history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
-    return (
-        fh.Div(
-            {
-                "class": "grid",
-                "id": "content-grid",
-            },
-            card,
-            history,
-        ),
-    )
 
-
-def render_sample_page(sample: Image) -> fh.Html:
-
-    content = render_sample_page_content(sample)
     page = fh.Html(
         fh.Head(
             fh.Title("Sample image page"),
@@ -353,7 +339,18 @@ def render_sample_page(sample: Image) -> fh.Html:
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
-                content,
+                fh.A(
+                    {"href": "/samples", "style": "margin-bottom: 20px; display: inline-block;"},
+                    "← All samples",
+                ),
+                fh.Div(
+                    {
+                        "class": "grid",
+                        "id": "content-grid",
+                    },
+                    card,
+                    history,
+                ),
             )
         ),
     )
