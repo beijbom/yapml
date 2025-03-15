@@ -270,7 +270,7 @@ def render_sample_history(boxes: list[BoundingBox]):
                         f"ID: {box.id} (Previous: {box.previous_box_id}), Created: {box.created_at}, Center X: {box.center_x:.2f}, Center Y: {box.center_y:.2f}, Width: {box.width:.2f}, Height: {box.height:.2f}, Label: {box.label_name}, Annotator: {box.annotator_name}",
                     )
                 )
-                for box in boxes
+                for box in boxes[::-1]
             ]
         ),
     )
@@ -292,9 +292,15 @@ def render_sample_list_page(samples: list[Image]):
                 fh.Div(
                     {"class": "grid"},
                     *[
-                        fh.A(
-                            {"href": f"/samples/{sample.id}", "style": "text-decoration:none;"},
+                        fh.Div(
                             render_image_card(sample),
+                            fh.A(
+                                {
+                                    "href": f"/samples/{sample.id}",
+                                    "style": "display:block; text-align:right; margin-top:5px;",
+                                },
+                                f"Details →",
+                            ),
                         )
                         for sample in samples
                     ],
