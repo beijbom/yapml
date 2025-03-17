@@ -1,6 +1,7 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
@@ -86,3 +87,44 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
     session.commit()
     session.refresh(new_box)
     return new_box
+
+
+class LabelCreate(BaseModel):
+    name: str
+    color: str
+
+
+@router.post("/labels", response_model=Label)
+async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
+    session = request.state.session
+
+    # Check if label with this name already exists
+    existing = session.exec(select(Label).where(Label.name == label_data.name)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Label with this name already exists")
+
+    # Create new label
+    label = Label(name=label_data.name, color=label_data.color)
+    session.add(label)
+    session.commit()
+    session.refresh(label)
+    return label
+
+
+# This is used for the form submission from the labels page.
+@router.post("/labels", include_in_schema=False)
+async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)):
+    session = request.state.session
+
+    # Check if label with this name already exists
+    existing = session.exec(select(Label).where(Label.name == name)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Label with this name already exists")
+
+    # Create new label
+    label = Label(name=name, color=color)
+    session.add(label)
+    session.commit()
+
+    # Redirect back to the labels page
+    return RedirectResponse(url="/labels", status_code=303)
