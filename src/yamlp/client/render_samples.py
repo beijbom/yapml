@@ -172,7 +172,6 @@ async function updateBoxPosition() {
                 center_y: centerY,
                 width: width,
                 height: height,
-                label_name: currentBox.dataset.label
             })
         });
         
@@ -238,7 +237,7 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
              data-image-height="{max_height}"
              data-width="{box.width}"
              data-height="{box.height}"
-             data-label="{box.label_name}"
+             data-label="{box.label.name}"
              style="position:absolute; 
                     left:{left}px; 
                     top:{top}px; 
@@ -249,6 +248,19 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
                     box-sizing:border-box;
                     cursor:move;
                     z-index:10;">
+            <!-- Label name at bottom left -->
+            <div style="position:absolute; 
+                        bottom:-20px; 
+                        left:0; 
+                        background-color:rgba(0,0,0,0.7); 
+                        color:white; 
+                        padding:2px 5px; 
+                        font-size:12px; 
+                        border-radius:2px;
+                        font-family:sans-serif;
+                        z-index:15;">
+                {box.label.name}
+            </div>
             <!-- Invisible resize handles - just for cursor change and interaction -->
             <div class="resize-handle nw" data-direction="nw" style="position:absolute; top:-5px; left:-5px; width:10px; height:10px; cursor:nw-resize; background:transparent;"></div>
             <div class="resize-handle ne" data-direction="ne" style="position:absolute; top:-5px; right:-5px; width:10px; height:10px; cursor:ne-resize; background:transparent;"></div>
@@ -346,7 +358,7 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
                 raise ValueError(f"Unknown event for box {box} {previous_box}")
         changes.append(
             BoxChange(
-                label_name=box.label_name,
+                label_name=box.label.name,
                 annotator_name=box.annotator_name,
                 event=event,
                 time_delta=time_delta_string(box.created_at),

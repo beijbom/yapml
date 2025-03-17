@@ -4,18 +4,26 @@ from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 
+class Label(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
+    color: str  #  hex color code
+    boxes: list["BoundingBox"] = Relationship(back_populates="label")
+
+
 class BoundingBox(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     center_x: float
     center_y: float
     width: float
     height: float
-    label_name: str
+    label_id: int = Field(foreign_key="label.id")
     annotator_name: str
     sample_id: int = Field(foreign_key="objectdetectionsample.id")
     created_at: datetime = Field(default_factory=datetime.now)
     previous_box_id: Optional[int] = Field(default=None, foreign_key="boundingbox.id", unique=True)
     sample: "ObjectDetectionSample" = Relationship(back_populates="boxes")
+    label: Label = Relationship(back_populates="boxes")
 
 
 class ObjectDetectionSample(SQLModel, table=True):
