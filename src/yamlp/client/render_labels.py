@@ -40,6 +40,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Function to delete label
+    function deleteLabel(labelId) {
+        if (!confirm('Are you sure you want to delete this label? This action cannot be undone.')) {
+            return;
+        }
+
+        fetch(`/api/v1/labels/${labelId}`, {
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Remove the label card from the UI
+            const labelCard = document.querySelector(`[data-label-id="${labelId}"]`);
+            if (labelCard) {
+                labelCard.remove();
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting label:', error);
+            alert('Failed to delete label. Please try again.');
+        });
+    }
+
     // Add event listeners to all color pickers
     document.querySelectorAll('.label-color-picker').forEach(picker => {
         // Store the original color
@@ -62,6 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update the stored original color
             this.setAttribute('data-original-color', newColor);
             updateLabelColor(labelId, newColor);
+        });
+    });
+
+    // Add event listeners to all delete buttons
+    document.querySelectorAll('.delete-label-btn').forEach(button => {
+        button.addEventListener('click', function(event) {
+            const labelId = this.getAttribute('data-label-id');
+            deleteLabel(labelId);
         });
     });
 });
@@ -134,6 +170,14 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                 fh.Small(
                                     {"style": "margin-left: auto; color: #6c757d;"},
                                     f"{len(suppress_stale_boxes(label.boxes))} annotations",
+                                ),
+                                fh.Button(
+                                    {
+                                        "class": "delete-label-btn",
+                                        "data-label-id": f"{label.id}",
+                                        "style": "background-color: #dc3545; border-color: #dc3545; padding: 5px 10px; margin-left: 10px;",
+                                    },
+                                    "Delete",
                                 ),
                             ),
                         )

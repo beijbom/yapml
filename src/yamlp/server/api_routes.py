@@ -57,6 +57,19 @@ async def update_label(request: Request, label_id: int, update_data: LabelUpdate
     return label
 
 
+@router.delete("/labels/{label_id}")
+async def delete_label(request: Request, label_id: int):
+    session = request.state.session
+    label = session.get(Label, label_id)
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    # Delete the label
+    session.delete(label)
+    session.commit()
+    return {"message": "Label deleted successfully"}
+
+
 # Define the update schema
 class BoxUpdate(BaseModel):
     center_x: Optional[float] = None
