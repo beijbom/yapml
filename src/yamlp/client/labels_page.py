@@ -168,30 +168,22 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
         ),
         fh.Body(
             fh.Main(
-                {"class": "container"},
                 fh.H1("Labels"),
                 fh.Nav(
                     fh.Ul(
                         fh.Li(fh.A({"href": "/samples"}, "Samples")),
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
                     ),
-                    style="margin-bottom: 20px;",
                 ),
-                fh.Article(
-                    fh.Form(
-                        {
-                            "action": "/api/v1/labels-form",
-                            "method": "post",
-                            "enctype": "application/x-www-form-urlencoded",
-                        },
-                        fh.Div(
-                            {"class": "grid"},
-                            fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
-                            fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
-                            fh.Button({"type": "submit"}, "Create Label"),
-                        ),
+                fh.Form(
+                    fh.Grid(
+                        fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
+                        fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
+                        fh.Button({"type": "submit"}, "Create Label"),
                     ),
-                    style="margin-bottom: 20px;",
+                    action="/api/v1/labels-form",
+                    method="post",
+                    enctype="application/x-www-form-urlencoded",
                 ),
                 fh.Grid(
                     *[
@@ -220,6 +212,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                 data_label_id=f"{label.id}",
                                 title="Delete label",
                             ),
+                            data_label_id=f"{label.id}",
                             style=f"""
                                 border-left: 5px solid {yamlp_gray_color};
                                 padding: 10px;
@@ -231,6 +224,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                         for label in labels
                     ],
                 ),
+                cls="container",
             )
         ),
     )
