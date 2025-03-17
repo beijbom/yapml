@@ -18,6 +18,12 @@ let originalLeft, originalTop, originalWidth, originalHeight;
 let imageRect;
 let resizeDirection = '';
 
+// Variables for drag-to-create
+let isDrawing = false;
+let drawStartX, drawStartY;
+let drawBox = null;
+let selectedLabelId = null;
+
 function initializeDraggable() {
     console.log('Initializing draggable');
     const image = document.querySelector('img');
@@ -193,7 +199,214 @@ async function updateBoxPosition() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializeDraggable);
+function initializeDrawing() {
+    const image = document.querySelector('img');
+    const imageContainer = image.parentElement;
+    
+    // Create hidden label selector with better styling
+    const labelSelector = document.createElement('select');
+    labelSelector.id = 'label-selector';
+    labelSelector.style.position = 'fixed';
+    labelSelector.style.display = 'none';
+    document.body.appendChild(labelSelector);
+    
+    // Add drawing functionality
+    imageContainer.addEventListener('mousedown', startDrawing);
+    imageContainer.addEventListener('mousemove', draw);
+    imageContainer.addEventListener('mouseup', stopDrawing);
+    
+    // Update label selector options
+    updateLabelSelector();
+}
+
+function updateLabelSelector() {
+    const labelSelector = document.getElementById('label-selector');
+    fetch('/api/v1/labels')
+        .then(response => response.json())
+        .then(labels => {
+            // Add a prompt option
+            labelSelector.innerHTML = `
+                <option value="" disabled selected>Select a label</option>
+                ${labels.map(label => 
+                    `<option value="${label.id}" data-color="${label.color}">${label.name}</option>`
+                ).join('')}
+            `;
+        });
+}
+
+function startDrawing(e) {
+    if (e.target.tagName === 'IMG') {
+        isDrawing = true;
+        const rect = e.target.getBoundingClientRect();
+        drawStartX = e.clientX - rect.left;
+        drawStartY = e.clientY - rect.top;
+        
+        // Create the drawing box at the start position
+        drawBox = document.createElement('div');
+        drawBox.className = 'drawing-box';
+        drawBox.style.position = 'absolute';
+        drawBox.style.border = '2px dashed #fff';
+        drawBox.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        drawBox.style.boxSizing = 'border-box';  // Ensure border is included in dimensions
+        drawBox.style.width = '0';
+        drawBox.style.height = '0';
+        e.target.parentElement.appendChild(drawBox);
+        
+        // Initial position will be set by the first draw event
+        draw(e);
+    }
+}
+
+function draw(e) {
+    if (!isDrawing || !drawBox) return;
+    
+    
+    console.log('Raw event:', {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target.tagName,
+        imageRect: {
+            left: imageRect.left,
+            top: imageRect.top
+        }
+    });
+    
+    const currentX = e.clientX - imageRect.left;
+    const currentY = e.clientY - imageRect.top;
+    
+    console.log('Calculated position:', {
+        currentX,
+        currentY,
+        drawStartX,
+        drawStartY
+    });
+    
+    // Calculate raw dimensions first
+    const rawWidth = Math.abs(currentX - drawStartX);
+    const rawHeight = Math.abs(currentY - drawStartY);
+    
+    // Determine if we need to enforce minimum size
+    // const width = Math.max(0.1, rawWidth);
+    // const height = Math.max(0.1, rawHeight);
+    const width = rawWidth;
+    const height = rawHeight;
+    
+    // Calculate position, adjusting for minimum size if needed
+    let left = Math.min(currentX, drawStartX);
+    let top = Math.min(currentY, drawStartY);
+    
+    // Update box position and size in a single batch
+    requestAnimationFrame(() => {
+        drawBox.style.left = `${left}px`;
+        drawBox.style.top = `${top}px`;
+        drawBox.style.width = `${width}px`;
+        drawBox.style.height = `${height}px`;
+    });
+}
+
+async function stopDrawing(e) {
+    if (!isDrawing || !drawBox) return;
+    isDrawing = false;
+    
+    const rect = e.target.getBoundingClientRect();
+    const endX = e.clientX - rect.left;
+    const endY = e.clientY - rect.top;
+    
+    // Only show label selector if box is big enough
+    if (Math.abs(endX - drawStartX) > 10 && Math.abs(endY - drawStartY) > 10) {
+        // Store box dimensions before showing selector, using parseFloat for precision
+        const boxDimensions = {
+            left: parseFloat(drawBox.style.left),
+            top: parseFloat(drawBox.style.top),
+            width: parseFloat(drawBox.style.width),
+            height: parseFloat(drawBox.style.height)
+        };
+        
+        // Store the box reference before we might clear it
+        const currentDrawBox = drawBox;
+        
+        // Position and show label selector
+        const labelSelector = document.getElementById('label-selector');
+        labelSelector.style.left = e.clientX + 'px';
+        labelSelector.style.top = e.clientY + 'px';
+        labelSelector.style.display = 'block';
+        
+        // Remove any existing onchange handler
+        labelSelector.onchange = null;
+        
+        // Create new onchange handler with access to boxDimensions
+        labelSelector.onchange = async () => {
+            const labelId = labelSelector.value;
+            if (!labelId) return;  // Skip if no label selected
+            
+            const imageElement = document.querySelector('img');
+            const imageWidth = imageElement.width;
+            const imageHeight = imageElement.height;
+            const sampleId = document.body.getAttribute('data-sample-id');
+            
+            console.log('Creating box with:', {
+                sampleId,
+                labelId,
+                imageWidth,
+                imageHeight,
+                boxDimensions
+            });
+            
+            // Calculate normalized coordinates using stored dimensions
+            const centerX = (boxDimensions.left + boxDimensions.width/2) / imageWidth;
+            const centerY = (boxDimensions.top + boxDimensions.height/2) / imageHeight;
+            const normalizedWidth = boxDimensions.width / imageWidth;
+            const normalizedHeight = boxDimensions.height / imageHeight;
+            
+            const payload = {
+                sample_id: parseInt(sampleId),
+                label_id: parseInt(labelId),
+                center_x: centerX,
+                center_y: centerY,
+                width: normalizedWidth,
+                height: normalizedHeight
+            };
+            
+            console.log('Sending payload:', payload);
+            
+            // Create the box
+            try {
+                const response = await fetch('/api/v1/boxes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to create box: ${JSON.stringify(errorData)}`);
+                }
+                
+                // Refresh the page to show new box
+                window.location.reload();
+            } catch (error) {
+                console.error('Error creating box:', error);
+                alert('Failed to create box. Please check console for details.');
+            } finally {
+                // Hide selector and remove drawing box
+                labelSelector.style.display = 'none';
+                if (currentDrawBox && currentDrawBox.parentNode) {
+                    currentDrawBox.remove();
+                }
+            }
+        };
+    } else {
+        drawBox.remove();
+    }
+    drawBox = null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDraggable();
+    initializeDrawing();
+});
 """
 
 DRAG_STYLE = """
@@ -202,6 +415,27 @@ DRAG_STYLE = """
 }
 .resize-handle {
     z-index: 20;
+}
+#label-selector {
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--card-background-color);
+    color: var(--color);
+    border: 1px solid var(--card-sectionning-background-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    min-width: 20px;
+    max-width: 120px;
+    z-index: 1000;
+    position: fixed;
+    cursor: pointer;
+}
+#label-selector option {
+    padding: 4px 8px;
+    cursor: pointer;
+}
+#label-selector option:hover {
+    background-color: var(--primary);
 }
 """
 
@@ -441,6 +675,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
             fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
+            {"data-sample-id": str(sample.id)},
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
@@ -455,7 +690,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                     history,
                     style="grid-template-columns: 3fr 1fr",
                 ),
-            )
+            ),
         ),
         data_theme="dark",
     )
