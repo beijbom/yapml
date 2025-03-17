@@ -15,30 +15,31 @@ let currentBox = null;
 let currentHandle = null;
 let startX, startY;
 let originalLeft, originalTop, originalWidth, originalHeight;
-let imageRect;
+let imageRect = null;
 let resizeDirection = '';
 
-// Variables for drag-to-create
+// Additional variables for drag-to-create
 let isDrawing = false;
 let drawStartX, drawStartY;
 let drawBox = null;
 let selectedLabelId = null;
+let currentImageContainer = null;
 
 function initializeDraggable() {
     console.log('Initializing draggable');
-    const image = document.querySelector('img');
-    imageRect = image.getBoundingClientRect();
-    
-    const boxes = document.querySelectorAll('.draggable-box');
-    console.log('Found boxes:', boxes.length);
-    boxes.forEach(box => {
-        box.style.cursor = 'move';
-        box.addEventListener('mousedown', startDragging);
-        
-        // Add event listeners to resize handles
-        const handles = box.querySelectorAll('.resize-handle');
-        handles.forEach(handle => {
-            handle.addEventListener('mousedown', startResizing);
+    const images = document.querySelectorAll('img');
+    images.forEach(image => {
+        const boxes = image.parentElement.querySelectorAll('.draggable-box');
+        console.log('Found boxes:', boxes.length);
+        boxes.forEach(box => {
+            box.style.cursor = 'move';
+            box.addEventListener('mousedown', startDragging);
+            
+            // Add event listeners to resize handles
+            const handles = box.querySelectorAll('.resize-handle');
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', startResizing);
+            });
         });
     });
 }
@@ -200,20 +201,22 @@ async function updateBoxPosition() {
 }
 
 function initializeDrawing() {
-    const image = document.querySelector('img');
-    const imageContainer = image.parentElement;
+    const images = document.querySelectorAll('img');
+    images.forEach(image => {
+        const imageContainer = image.parentElement;
+        
+        // Add drawing functionality to each image
+        imageContainer.addEventListener('mousedown', startDrawing);
+        imageContainer.addEventListener('mousemove', draw);
+        imageContainer.addEventListener('mouseup', stopDrawing);
+    });
     
-    // Create hidden label selector with better styling
+    // Create hidden label selector (shared between all images)
     const labelSelector = document.createElement('select');
     labelSelector.id = 'label-selector';
     labelSelector.style.position = 'fixed';
     labelSelector.style.display = 'none';
     document.body.appendChild(labelSelector);
-    
-    // Add drawing functionality
-    imageContainer.addEventListener('mousedown', startDrawing);
-    imageContainer.addEventListener('mousemove', draw);
-    imageContainer.addEventListener('mouseup', stopDrawing);
     
     // Update label selector options
     updateLabelSelector();
@@ -237,9 +240,11 @@ function updateLabelSelector() {
 function startDrawing(e) {
     if (e.target.tagName === 'IMG') {
         isDrawing = true;
-        const rect = e.target.getBoundingClientRect();
-        drawStartX = e.clientX - rect.left;
-        drawStartY = e.clientY - rect.top;
+        currentImageContainer = e.target.parentElement;
+        imageRect = e.target.getBoundingClientRect();
+        
+        drawStartX = e.clientX - imageRect.left;
+        drawStartY = e.clientY - imageRect.top;
         
         // Create the drawing box at the start position
         drawBox = document.createElement('div');
@@ -247,10 +252,10 @@ function startDrawing(e) {
         drawBox.style.position = 'absolute';
         drawBox.style.border = '2px dashed #fff';
         drawBox.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-        drawBox.style.boxSizing = 'border-box';  // Ensure border is included in dimensions
+        drawBox.style.boxSizing = 'border-box';
         drawBox.style.width = '0';
         drawBox.style.height = '0';
-        e.target.parentElement.appendChild(drawBox);
+        currentImageContainer.appendChild(drawBox);
         
         // Initial position will be set by the first draw event
         draw(e);
@@ -258,8 +263,17 @@ function startDrawing(e) {
 }
 
 function draw(e) {
-    if (!isDrawing || !drawBox) return;
-    
+    // Early return if we're not in a valid drawing state
+    if (!isDrawing) return;
+    if (!drawBox || !drawBox.parentNode) {
+        // If drawBox is no longer valid, clean up the drawing state
+        isDrawing = false;
+        drawBox = null;
+        currentImageContainer = null;
+        imageRect = null;
+        return;
+    }
+    if (!currentImageContainer || e.target.parentElement !== currentImageContainer) return;
     
     console.log('Raw event:', {
         clientX: e.clientX,
@@ -282,25 +296,24 @@ function draw(e) {
     });
     
     // Calculate raw dimensions first
-    const rawWidth = Math.abs(currentX - drawStartX);
-    const rawHeight = Math.abs(currentY - drawStartY);
-    
-    // Determine if we need to enforce minimum size
-    // const width = Math.max(0.1, rawWidth);
-    // const height = Math.max(0.1, rawHeight);
-    const width = rawWidth;
-    const height = rawHeight;
+    const width = Math.abs(currentX - drawStartX);
+    const height = Math.abs(currentY - drawStartY);
     
     // Calculate position, adjusting for minimum size if needed
     let left = Math.min(currentX, drawStartX);
     let top = Math.min(currentY, drawStartY);
     
+    // Store current box reference to ensure it exists throughout the animation frame
+    const currentDrawBox = drawBox;
+    
     // Update box position and size in a single batch
     requestAnimationFrame(() => {
-        drawBox.style.left = `${left}px`;
-        drawBox.style.top = `${top}px`;
-        drawBox.style.width = `${width}px`;
-        drawBox.style.height = `${height}px`;
+        if (currentDrawBox && currentDrawBox.parentNode) {
+            currentDrawBox.style.left = `${left}px`;
+            currentDrawBox.style.top = `${top}px`;
+            currentDrawBox.style.width = `${width}px`;
+            currentDrawBox.style.height = `${height}px`;
+        }
     });
 }
 
@@ -308,25 +321,38 @@ async function stopDrawing(e) {
     if (!isDrawing || !drawBox) return;
     isDrawing = false;
     
-    const rect = e.target.getBoundingClientRect();
-    const endX = e.clientX - rect.left;
-    const endY = e.clientY - rect.top;
+    // Store references before we clear them
+    const finalDrawBox = drawBox;
+    const finalImageContainer = currentImageContainer;
+    
+    const endX = e.clientX - imageRect.left;
+    const endY = e.clientY - imageRect.top;
+    
+    // Clear global state immediately
+    drawBox = null;
+    currentImageContainer = null;
+    imageRect = null;
     
     // Only show label selector if box is big enough
     if (Math.abs(endX - drawStartX) > 10 && Math.abs(endY - drawStartY) > 10) {
-        // Store box dimensions before showing selector, using parseFloat for precision
+        // Store box dimensions before showing selector
         const boxDimensions = {
-            left: parseFloat(drawBox.style.left),
-            top: parseFloat(drawBox.style.top),
-            width: parseFloat(drawBox.style.width),
-            height: parseFloat(drawBox.style.height)
+            left: parseFloat(finalDrawBox.style.left),
+            top: parseFloat(finalDrawBox.style.top),
+            width: parseFloat(finalDrawBox.style.width),
+            height: parseFloat(finalDrawBox.style.height)
         };
-        
-        // Store the box reference before we might clear it
-        const currentDrawBox = drawBox;
         
         // Position and show label selector
         const labelSelector = document.getElementById('label-selector');
+        if (!labelSelector) {
+            console.error('Label selector not found');
+            if (finalDrawBox && finalDrawBox.parentNode) {
+                finalDrawBox.remove();
+            }
+            return;
+        }
+        
         labelSelector.style.left = e.clientX + 'px';
         labelSelector.style.top = e.clientY + 'px';
         labelSelector.style.display = 'block';
@@ -334,15 +360,43 @@ async function stopDrawing(e) {
         // Remove any existing onchange handler
         labelSelector.onchange = null;
         
-        // Create new onchange handler with access to boxDimensions
+        // Create new onchange handler with access to stored state
         labelSelector.onchange = async () => {
             const labelId = labelSelector.value;
             if (!labelId) return;  // Skip if no label selected
             
-            const imageElement = document.querySelector('img');
+            // Verify we still have access to the image container
+            if (!finalImageContainer) {
+                console.error('Image container no longer available');
+                labelSelector.style.display = 'none';
+                if (finalDrawBox && finalDrawBox.parentNode) {
+                    finalDrawBox.remove();
+                }
+                return;
+            }
+            
+            const imageElement = finalImageContainer.querySelector('img');
+            if (!imageElement) {
+                console.error('Image element not found');
+                labelSelector.style.display = 'none';
+                if (finalDrawBox && finalDrawBox.parentNode) {
+                    finalDrawBox.remove();
+                }
+                return;
+            }
+            
             const imageWidth = imageElement.width;
             const imageHeight = imageElement.height;
-            const sampleId = document.body.getAttribute('data-sample-id');
+            const sampleId = finalImageContainer.parentElement.getAttribute('data-sample-id');
+            
+            if (!sampleId) {
+                console.error('Sample ID not found');
+                labelSelector.style.display = 'none';
+                if (finalDrawBox && finalDrawBox.parentNode) {
+                    finalDrawBox.remove();
+                }
+                return;
+            }
             
             console.log('Creating box with:', {
                 sampleId,
@@ -392,15 +446,16 @@ async function stopDrawing(e) {
             } finally {
                 // Hide selector and remove drawing box
                 labelSelector.style.display = 'none';
-                if (currentDrawBox && currentDrawBox.parentNode) {
-                    currentDrawBox.remove();
+                if (finalDrawBox && finalDrawBox.parentNode) {
+                    finalDrawBox.remove();
                 }
             }
         };
     } else {
-        drawBox.remove();
+        if (finalDrawBox && finalDrawBox.parentNode) {
+            finalDrawBox.remove();
+        }
     }
-    drawBox = null;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -645,6 +700,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                 fh.Grid(
                     *[
                         fh.Div(
+                            {"data-sample-id": str(sample.id)},  # Added sample ID to the container
                             render_image_card(sample),
                             fh.A(
                                 "Details →",
@@ -655,7 +711,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                         for sample in samples
                     ],
                 ),
-            )
+            ),
         ),
         data_theme="dark",
     )
@@ -675,7 +731,6 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
             fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
-            {"data-sample-id": str(sample.id)},
             fh.Main(
                 fh.H1("Sample image page"),
                 fh.Nav(
@@ -685,7 +740,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                     ),
                 ),
                 fh.Grid(
-                    card,
+                    fh.Div({"data-sample-id": str(sample.id)}, card),
                     history,
                     style="grid-template-columns: 3fr 1fr",
                 ),
