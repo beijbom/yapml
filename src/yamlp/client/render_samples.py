@@ -1,6 +1,7 @@
-from contextlib import redirect_stderr
+from datetime import datetime
 
 import fasthtml.common as fh
+from pydantic import BaseModel
 
 from yamlp.datamodel import BoundingBox, Image, suppress_stale_boxes
 
@@ -267,23 +268,114 @@ def render_image_card(sample: Image, max_width: int = 500, max_height: int = 500
     return parent_div(img, raw_html)
 
 
+class BoxChange(BaseModel):
+    label_name: str
+    annotator_name: str
+    event: str
+    time_delta: str
+
+
+def time_delta_string(timestamp: datetime) -> str:
+    """
+    Convert a timestamp to a human-readable relative time string.
+
+    Args:
+        timestamp: The datetime to convert
+
+    Returns:
+        A string like "just now", "5 seconds ago", "2 minutes ago", "3 hours ago", "2 days ago", etc.
+    """
+    now = datetime.now()
+    delta = now - timestamp
+
+    # Convert to total seconds
+    seconds = int(delta.total_seconds())
+
+    # Define time intervals
+    minute = 60
+    hour = minute * 60
+    day = hour * 24
+    week = day * 7
+    month = day * 30
+    year = day * 365
+
+    if seconds < 10:
+        return "just now"
+    elif seconds < minute:
+        return f"{seconds} seconds ago"
+    elif seconds < 2 * minute:
+        return "a minute ago"
+    elif seconds < hour:
+        return f"{seconds // minute} minutes ago"
+    elif seconds < 2 * hour:
+        return "an hour ago"
+    elif seconds < day:
+        return f"{seconds // hour} hours ago"
+    elif seconds < 2 * day:
+        return "yesterday"
+    elif seconds < week:
+        return f"{seconds // day} days ago"
+    elif seconds < 2 * week:
+        return "a week ago"
+    elif seconds < month:
+        return f"{seconds // week} weeks ago"
+    elif seconds < 2 * month:
+        return "a month ago"
+    elif seconds < year:
+        return f"{seconds // month} months ago"
+    elif seconds < 2 * year:
+        return "a year ago"
+    else:
+        return f"{seconds // year} years ago"
+
+
+def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
+
+    box_by_id = {box.id: box for box in boxes}
+    changes: list[BoxChange] = []
+    for box in boxes:
+        if box.previous_box_id is None:
+            event = "created"
+        else:
+            previous_box = box_by_id[box.previous_box_id]
+            if previous_box.width != box.width or previous_box.height != box.height:
+                event = "resized"
+            elif previous_box.center_x != box.center_x or previous_box.center_y != box.center_y:
+                event = "moved"
+            else:
+                raise ValueError(f"Unknown event for box {box} {previous_box}")
+            changes.append(
+                BoxChange(
+                    label_name=box.label_name,
+                    annotator_name=box.annotator_name,
+                    event=event,
+                    time_delta=time_delta_string(box.created_at),
+                )
+            )
+    return changes
+
+
 def render_sample_history(boxes: list[BoundingBox], sample_id: int):
+    changes = boxes_to_changes(boxes)
     return fh.Div(
         {
             "id": "history-section",
             "hx-get": f"/samples/{sample_id}/history",
             "hx-trigger": "boxUpdated from:body",
             "hx-swap": "outerHTML",
+            "style": "padding: 10px;",
         },
         fh.Ul(
+            {"style": "list-style-type: none; padding-left: 0; margin: 0;"},
             *[
                 fh.Li(
-                    fh.P(
-                        f"ID: {box.id} (Previous: {box.previous_box_id}), Created: {box.created_at}, Center X: {box.center_x:.2f}, Center Y: {box.center_y:.2f}, Width: {box.width:.2f}, Height: {box.height:.2f}, Label: {box.label_name}, Annotator: {box.annotator_name}",
-                    )
+                    {"style": "padding: 3px 0; border-bottom: 1px solid #eee; font-size: 0.9em;"},
+                    fh.Strong(f"{change.label_name} "),
+                    f"{change.event} by {change.annotator_name} ",
+                    fh.Small({"style": "color: #6c757d;"}, change.time_delta),
                 )
-                for box in boxes[::-1]
-            ]
+                for change in changes[::-1]
+            ],
         ),
     )
 
