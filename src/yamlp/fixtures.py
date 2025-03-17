@@ -6,7 +6,7 @@ from PIL import Image as PILImage
 from sqlmodel import Session, create_engine
 
 from yamlp.config import image_dir, image_url_prefix, sqlite_url
-from yamlp.datamodel import BoundingBox, Image
+from yamlp.datamodel import BoundingBox, ObjectDetectionSample
 
 
 def populate_db() -> None:
@@ -24,9 +24,13 @@ def populate_db() -> None:
 
     with Session(engine) as session:
         # First transaction: Add images
-        image1 = Image(filename="test1.jpg", width=500, height=500, url=f"{image_url_prefix}/test1.jpg")
-        image2 = Image(filename="test2.jpg", width=500, height=500, url=f"{image_url_prefix}/test2.jpg")
-        session.add_all([image1, image2])
+        sample1 = ObjectDetectionSample(
+            filename="test1.jpg", width=500, height=500, url=f"{image_url_prefix}/test1.jpg"
+        )
+        sample2 = ObjectDetectionSample(
+            filename="test2.jpg", width=500, height=500, url=f"{image_url_prefix}/test2.jpg"
+        )
+        session.add_all([sample1, sample2])
         session.commit()
 
         # Create and add boxes in the same session after images are committed
@@ -36,7 +40,7 @@ def populate_db() -> None:
             width=0.1,
             height=0.1,
             label_name="dog",
-            image_id=image1.id,
+            sample_id=sample1.id,
             annotator_name="alice",
         )
         box2 = BoundingBox(
@@ -45,7 +49,7 @@ def populate_db() -> None:
             width=0.1,
             height=0.1,
             label_name="dog",
-            image_id=image1.id,
+            sample_id=sample1.id,
             annotator_name="bob",
         )
         box3 = BoundingBox(
@@ -54,7 +58,7 @@ def populate_db() -> None:
             width=0.1,
             height=0.1,
             label_name="dog",
-            image_id=image2.id,
+            sample_id=sample2.id,
             annotator_name="alice",
             created_at=datetime.now() - timedelta(days=10),
         )
@@ -67,7 +71,7 @@ def populate_db() -> None:
             width=0.2,
             height=0.1,
             label_name="dog",
-            image_id=image2.id,
+            sample_id=sample2.id,
             annotator_name="alice",
             previous_box_id=box3.id,
         )

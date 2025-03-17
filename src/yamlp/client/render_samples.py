@@ -3,7 +3,7 @@ from datetime import datetime
 import fasthtml.common as fh
 from pydantic import BaseModel
 
-from yamlp.datamodel import BoundingBox, Image, suppress_stale_boxes
+from yamlp.datamodel import BoundingBox, ObjectDetectionSample, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -206,7 +206,7 @@ DRAG_STYLE = """
 """
 
 
-def render_image_card(sample: Image, max_width: int = 500, max_height: int = 500) -> fh.Div:
+def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_height: int = 500) -> fh.Div:
     """
     Render an image with draggable and resizable bounding boxes.
 
@@ -334,7 +334,7 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
     box_by_id = {box.id: box for box in boxes}
     changes: list[BoxChange] = []
     for box in boxes:
-        if box.previous_box_id is None:
+        if not box.previous_box_id:
             event = "created"
         else:
             previous_box = box_by_id[box.previous_box_id]
@@ -344,14 +344,14 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
                 event = "moved"
             else:
                 raise ValueError(f"Unknown event for box {box} {previous_box}")
-            changes.append(
-                BoxChange(
-                    label_name=box.label_name,
-                    annotator_name=box.annotator_name,
-                    event=event,
-                    time_delta=time_delta_string(box.created_at),
-                )
+        changes.append(
+            BoxChange(
+                label_name=box.label_name,
+                annotator_name=box.annotator_name,
+                event=event,
+                time_delta=time_delta_string(box.created_at),
             )
+        )
     return changes
 
 
@@ -380,7 +380,7 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
     )
 
 
-def render_sample_list_page(samples: list[Image]):
+def render_sample_list_page(samples: list[ObjectDetectionSample]):
 
     page = fh.Html(
         fh.Head(
@@ -415,7 +415,7 @@ def render_sample_list_page(samples: list[Image]):
     return page
 
 
-def render_sample_page(sample: Image) -> fh.Html:
+def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
     history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
 
