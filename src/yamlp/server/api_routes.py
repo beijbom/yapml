@@ -37,6 +37,25 @@ async def get_labels(request: Request) -> list[Label]:
     return results
 
 
+class LabelUpdate(BaseModel):
+    color: str
+
+
+@router.put("/labels/{label_id}")
+async def update_label(request: Request, label_id: int, update_data: LabelUpdate) -> Label:
+    session = request.state.session
+    label = session.get(Label, label_id)
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    # Update the label color
+    label.color = update_data.color
+    session.add(label)
+    session.commit()
+    session.refresh(label)
+    return label
+
+
 # Define the update schema
 class BoxUpdate(BaseModel):
     center_x: Optional[float] = None
