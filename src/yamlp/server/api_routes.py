@@ -38,8 +38,50 @@ async def get_labels(request: Request) -> list[Label]:
     return results
 
 
-class LabelUpdate(BaseModel):
+class LabelCreate(BaseModel):
+    name: str
     color: str
+
+
+@router.post("/labels", response_model=Label)
+async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
+    session = request.state.session
+
+    # Check if label with this name already exists
+    existing = session.exec(select(Label).where(Label.name == label_data.name)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Label with this name already exists")
+
+    # Create new label
+    label = Label(name=label_data.name, color=label_data.color)
+    session.add(label)
+    session.commit()
+    session.refresh(label)
+    return label
+
+
+# This is used for the form submission from the labels page.
+@router.post("/labels", include_in_schema=False)
+async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)):
+    session = request.state.session
+
+    # Check if label with this name already exists
+    existing = session.exec(select(Label).where(Label.name == name)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Label with this name already exists")
+
+    # Create new label
+    label = Label(name=name, color=color)
+    session.add(label)
+    session.commit()
+
+    # Redirect back to the labels page
+    return RedirectResponse(url="/labels", status_code=303)
+
+
+class LabelUpdate(BaseModel):
+    name: str | None = None
+    color: str | None = None
 
 
 @router.put("/labels/{label_id}")
@@ -49,8 +91,17 @@ async def update_label(request: Request, label_id: int, update_data: LabelUpdate
     if not label:
         raise HTTPException(status_code=404, detail="Label not found")
 
-    # Update the label color
-    label.color = update_data.color
+    # Check if name is being updated and if it already exists
+    if update_data.name is not None:
+        existing = session.exec(select(Label).where(Label.name == update_data.name)).first()
+        if existing and existing.id != label_id:
+            raise HTTPException(status_code=400, detail="Label with this name already exists")
+        label.name = update_data.name
+
+    # Update the label color if provided
+    if update_data.color is not None:
+        label.color = update_data.color
+
     session.add(label)
     session.commit()
     session.refresh(label)
@@ -100,44 +151,3 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
     session.commit()
     session.refresh(new_box)
     return new_box
-
-
-class LabelCreate(BaseModel):
-    name: str
-    color: str
-
-
-@router.post("/labels", response_model=Label)
-async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
-    session = request.state.session
-
-    # Check if label with this name already exists
-    existing = session.exec(select(Label).where(Label.name == label_data.name)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Label with this name already exists")
-
-    # Create new label
-    label = Label(name=label_data.name, color=label_data.color)
-    session.add(label)
-    session.commit()
-    session.refresh(label)
-    return label
-
-
-# This is used for the form submission from the labels page.
-@router.post("/labels", include_in_schema=False)
-async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)):
-    session = request.state.session
-
-    # Check if label with this name already exists
-    existing = session.exec(select(Label).where(Label.name == name)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Label with this name already exists")
-
-    # Create new label
-    label = Label(name=name, color=color)
-    session.add(label)
-    session.commit()
-
-    # Redirect back to the labels page
-    return RedirectResponse(url="/labels", status_code=303)
