@@ -627,7 +627,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
 
     page = fh.Html(
         fh.Head(
-            fh.Title("Yet Another ML Platform"),
+            fh.Title("Samples"),
             fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
@@ -677,7 +677,6 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
         fh.Body(
             {"data-sample-id": str(sample.id)},
             fh.Main(
-                {"class": "container"},
                 fh.H1("Sample image page"),
                 fh.Nav(
                     fh.Ul(
@@ -690,6 +689,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                     history,
                     style="grid-template-columns: 3fr 1fr",
                 ),
+                cls="container",
             ),
         ),
         data_theme="dark",
