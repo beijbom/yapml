@@ -7,7 +7,7 @@ import yamlp.client as client
 from yamlp.config import favicon_path
 from yamlp.datamodel import BoundingBox
 from yamlp.db import get_session
-from yamlp.server.api_routes import get_sample, get_samples
+from yamlp.server.api_routes import get_labels, get_sample, get_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 
@@ -23,6 +23,13 @@ async def homepage(request: Request) -> HTMLResponse:
 async def samples_list_page(request: Request) -> HTMLResponse:
     samples = await get_samples(request)
     page = client.render_sample_list_page(samples)
+    return HTMLResponse(fh.to_xml(page))
+
+
+@router.get("/labels")
+async def labels_page(request: Request) -> HTMLResponse:
+    labels = await get_labels(request)
+    page = client.render_label_list_page(labels)
     return HTMLResponse(fh.to_xml(page))
 
 

@@ -405,6 +405,13 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
             fh.Main(
                 {"class": "container"},
                 fh.H1("Yet Another ML Platform"),
+                fh.Nav(
+                    {"style": "margin-bottom: 20px;"},
+                    fh.Ul(
+                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
+                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
+                    ),
+                ),
                 fh.Div(
                     {"class": "grid"},
                     *[
@@ -443,9 +450,12 @@ def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
-                fh.A(
-                    {"href": "/samples", "style": "margin-bottom: 20px; display: inline-block;"},
-                    "← All samples",
+                fh.Nav(
+                    {"style": "margin-bottom: 20px;"},
+                    fh.Ul(
+                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
+                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
+                    ),
                 ),
                 fh.Div(
                     {

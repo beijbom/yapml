@@ -15,8 +15,10 @@ router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 async def get_samples(request: Request) -> list[ObjectDetectionSample]:
     session = request.state.session
 
-    query = select(ObjectDetectionSample).options(selectinload(ObjectDetectionSample.boxes))
+    query = select(ObjectDetectionSample)
     results = session.exec(query).all()
+    for sample in results:
+        _ = sample.boxes
     return results
 
 
@@ -25,6 +27,14 @@ async def get_sample(request: Request, sample_id: int) -> ObjectDetectionSample:
     session = request.state.session
     sample = session.get(ObjectDetectionSample, sample_id)
     return sample
+
+
+@router.get("/labels")
+async def get_labels(request: Request) -> list[Label]:
+    session = request.state.session
+    query = select(Label)
+    results = session.exec(query).all()
+    return results
 
 
 # Define the update schema
