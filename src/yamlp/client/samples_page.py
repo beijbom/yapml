@@ -355,7 +355,7 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
             elif previous_box.center_x != box.center_x or previous_box.center_y != box.center_y:
                 event = "moved"
             else:
-                raise ValueError(f"Unknown event for box {box} {previous_box}")
+                continue  # Skip if no changes
         changes.append(
             BoxChange(
                 label_name=box.label.name,
@@ -412,8 +412,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
                     ),
                 ),
-                fh.Div(
-                    {"class": "grid"},
+                fh.Grid(
                     *[
                         fh.Div(
                             render_image_card(sample),
@@ -457,13 +456,10 @@ def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
                     ),
                 ),
-                fh.Div(
-                    {
-                        "class": "grid",
-                        "id": "content-grid",
-                    },
+                fh.Grid(
                     card,
                     history,
+                    style="grid-template-columns: 2fr 1fr; gap: 20px;",  # Set left column to 2/3 and right column to 1/3 width
                 ),
             )
         ),
