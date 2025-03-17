@@ -34,8 +34,7 @@ async def labels_page(request: Request) -> HTMLResponse:
 @router.get("/samples/{image_id}")
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
-    labels = await list_labels(request)
-    page = client.render_sample_page(sample, labels)
+    page = client.render_sample_page(sample)
     return HTMLResponse(fh.to_xml(page))
 
 

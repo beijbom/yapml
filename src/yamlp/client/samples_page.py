@@ -3,6 +3,7 @@ from datetime import datetime
 import fasthtml.common as fh
 from pydantic import BaseModel
 
+from yamlp.client.navbar import navbar
 from yamlp.client.styles import yamlp_gray_color
 from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
 
@@ -573,15 +574,12 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
     """
     Render an image with draggable and resizable bounding boxes.
     """
-    parent_div = fh.Div(
-        style=f"position:relative; width:{max_width}px; height:{max_height}px;", **{"data-sample-id": str(sample.id)}
+    return fh.Div(
+        fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;"),
+        *[render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)],
+        style=f"position:relative; width:{max_width}px; height:{max_height}px;",
+        **{"data-sample-id": str(sample.id)},
     )
-
-    img = fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;")
-
-    boxes = [render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)]
-
-    return parent_div(img, *boxes)
 
 
 class BoxChange(BaseModel):
@@ -693,72 +691,80 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
 
 
 def render_sample_list_page(samples: list[ObjectDetectionSample]):
+    main = (
+        fh.Main(
+            fh.H1("Samples"),
+            fh.Grid(
+                *[
+                    fh.Div(
+                        render_image_card(sample),
+                        fh.A(
+                            "Details →",
+                            href=f"/samples/{sample.id}",
+                            style="display:block; text-align:left; margin-top:5px;",
+                        ),
+                    )
+                    for sample in samples
+                ],
+            ),
+            style="padding: 2rem;",
+        ),
+    )
+
+    body = (
+        fh.Div(
+            navbar,
+            main,
+            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
+        ),
+    )
 
     page = fh.Html(
         fh.Head(
-            fh.Title("Samples"),
+            fh.Title("Samples - Yet Another ML Platform"),
             fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
         ),
         fh.Body(
-            fh.Main(
-                {"class": "container"},
-                fh.H1("Yet Another ML Platform"),
-                fh.Nav(
-                    fh.Ul(
-                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
-                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
-                    ),
-                ),
-                fh.Grid(
-                    *[
-                        fh.Div(
-                            render_image_card(sample),
-                            fh.A(
-                                "Details →",
-                                href=f"/samples/{sample.id}",
-                                style="display:block; text-align:left; margin-top:5px;",
-                            ),
-                        )
-                        for sample in samples
-                    ],
-                ),
-            ),
+            body,
         ),
         data_theme="dark",
     )
     return page
 
 
-def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh.Html:
+def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
     history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
-
+    main = (
+        fh.Main(
+            fh.H1("Sample image page"),
+            fh.Grid(
+                card,  # Remove outer div since sample ID is now in render_image_card
+                history,
+                style="grid-template-columns: 3fr 1fr",
+            ),
+            style="padding: 2rem;",
+        ),
+    )
+    body = (
+        fh.Div(
+            navbar,
+            main,
+            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
+        ),
+    )
     page = fh.Html(
         fh.Head(
-            fh.Title("Sample image page"),
+            fh.Title("Labels - Yet Another ML Platform"),
             fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
             fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
-            fh.Main(
-                fh.H1("Sample image page"),
-                fh.Nav(
-                    fh.Ul(
-                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
-                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
-                    ),
-                ),
-                fh.Grid(
-                    card,  # Remove outer div since sample ID is now in render_image_card
-                    history,
-                    style="grid-template-columns: 3fr 1fr",
-                ),
-                cls="container",
-            ),
+            body,
         ),
         data_theme="dark",
     )
