@@ -573,15 +573,12 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
     """
     Render an image with draggable and resizable bounding boxes.
     """
-    parent_div = fh.Div(
-        style=f"position:relative; width:{max_width}px; height:{max_height}px;", **{"data-sample-id": str(sample.id)}
+    return fh.Div(
+        fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;"),
+        *[render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)],
+        style=f"position:relative; width:{max_width}px; height:{max_height}px;",
+        **{"data-sample-id": str(sample.id)},
     )
-
-    img = fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;")
-
-    boxes = [render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)]
-
-    return parent_div(img, *boxes)
 
 
 class BoxChange(BaseModel):
