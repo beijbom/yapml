@@ -66,7 +66,7 @@ async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
 
 
 # This is used for the form submission from the labels page.
-@router.post("/labels", include_in_schema=False)
+@router.post("/labels-form", include_in_schema=False)
 async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)):
     session = request.state.session
 
