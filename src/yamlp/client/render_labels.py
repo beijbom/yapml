@@ -95,6 +95,22 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
                     ),
                 ),
+                fh.Article(
+                    {"style": "margin-bottom: 20px;"},
+                    fh.Form(
+                        {
+                            "action": "/api/v1/labels",
+                            "method": "post",
+                            "enctype": "application/x-www-form-urlencoded",
+                        },
+                        fh.Div(
+                            {"class": "grid"},
+                            fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
+                            fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
+                            fh.Button({"type": "submit"}, "Create Label"),
+                        ),
+                    ),
+                ),
                 fh.Div(
                     {"class": "grid"},
                     *[
