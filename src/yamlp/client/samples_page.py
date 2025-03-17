@@ -734,34 +734,37 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
     return page
 
 
-def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh.Html:
+def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
     history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
-
+    main = (
+        fh.Main(
+            fh.H1("Sample image page"),
+            fh.Grid(
+                card,  # Remove outer div since sample ID is now in render_image_card
+                history,
+                style="grid-template-columns: 3fr 1fr",
+            ),
+            style="padding: 2rem;",
+        ),
+    )
+    body = (
+        fh.Div(
+            navbar,
+            main,
+            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
+        ),
+    )
     page = fh.Html(
         fh.Head(
-            fh.Title("Sample image page"),
+            fh.Title("Labels - Yet Another ML Platform"),
             fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
             fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
-            fh.Main(
-                fh.H1("Sample image page"),
-                fh.Nav(
-                    fh.Ul(
-                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
-                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
-                    ),
-                ),
-                fh.Grid(
-                    card,  # Remove outer div since sample ID is now in render_image_card
-                    history,
-                    style="grid-template-columns: 3fr 1fr",
-                ),
-                cls="container",
-            ),
+            body,
         ),
         data_theme="dark",
     )
