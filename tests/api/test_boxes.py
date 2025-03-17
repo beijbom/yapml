@@ -7,7 +7,9 @@ from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
 def test_box(test_session):
     """Create a test image and box"""
     # Create test image
-    sample = ObjectDetectionSample(filename="test.jpg", url="https://example.com/test.jpg", width=100, height=100)
+    sample = ObjectDetectionSample(
+        filename="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100
+    )
     test_session.add(sample)
     test_session.commit()
 
