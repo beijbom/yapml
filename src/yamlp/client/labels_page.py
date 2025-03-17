@@ -1,5 +1,6 @@
 import fasthtml.common as fh
 
+from yamlp.client.styles import yamlp_gray_color
 from yamlp.datamodel import Label, suppress_stale_boxes
 
 # JavaScript for handling color changes and name edits
@@ -169,7 +170,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
     page = fh.Html(
         fh.Head(
             fh.Title("Labels - Yet Another ML Platform"),
-            fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
+            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Script(COLOR_CHANGE_SCRIPT),
         ),
         fh.Body(
@@ -177,14 +178,13 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                 {"class": "container"},
                 fh.H1("Labels"),
                 fh.Nav(
-                    {"style": "margin-bottom: 20px;"},
                     fh.Ul(
                         fh.Li(fh.A({"href": "/samples"}, "Samples")),
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
                     ),
+                    style="margin-bottom: 20px;",
                 ),
                 fh.Article(
-                    {"style": "margin-bottom: 20px;"},
                     fh.Form(
                         {
                             "action": "/api/v1/labels",
@@ -198,6 +198,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                             fh.Button({"type": "submit"}, "Create Label"),
                         ),
                     ),
+                    style="margin-bottom: 20px;",
                 ),
                 fh.Div(
                     {"class": "grid"},
@@ -218,12 +219,10 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                             fh.Div(
                                 {"style": "display: flex; align-items: center; gap: 10px;"},
                                 fh.H4(
-                                    {
-                                        "style": "margin: 0; cursor: pointer;",
-                                        "class": "label-name",
-                                        "title": "Double-click to edit",
-                                    },
                                     label.name,
+                                    cls="label-name",
+                                    style="margin: 0; cursor: pointer;",
+                                    title="Double-click to edit",
                                 ),
                                 fh.Input(
                                     {
@@ -235,8 +234,8 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                     }
                                 ),
                                 fh.Small(
-                                    {"style": "margin-left: auto; color: #6c757d;"},
                                     f"{len(suppress_stale_boxes(label.boxes))} annotations",
+                                    style=f"margin-left: auto; color: {yamlp_gray_color};",
                                 ),
                             ),
                             fh.Button(
