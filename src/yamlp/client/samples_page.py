@@ -387,10 +387,11 @@ async function stopDrawing(e) {
             
             const imageWidth = imageElement.width;
             const imageHeight = imageElement.height;
-            const sampleId = finalImageContainer.parentElement.getAttribute('data-sample-id');
+            // Look for sample ID on the image container itself now
+            const sampleId = finalImageContainer.getAttribute('data-sample-id');
             
             if (!sampleId) {
-                console.error('Sample ID not found');
+                console.error('Sample ID not found on image container');
                 labelSelector.style.display = 'none';
                 if (finalDrawBox && finalDrawBox.parentNode) {
                     finalDrawBox.remove();
@@ -560,7 +561,10 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
         """
 
     # Create the parent container with the image
-    parent_div = fh.Div(style=f"position:relative; width:{max_width}px; height:{max_height}px;")
+    parent_div = fh.Div(
+        style=f"position:relative; width:{max_width}px; height:{max_height}px;",
+        **{"data-sample-id": str(sample.id)},  # Add sample ID to the image container
+    )
 
     img = fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;")
 
@@ -700,7 +704,6 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                 fh.Grid(
                     *[
                         fh.Div(
-                            {"data-sample-id": str(sample.id)},  # Added sample ID to the container
                             render_image_card(sample),
                             fh.A(
                                 "Details →",
@@ -740,7 +743,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                     ),
                 ),
                 fh.Grid(
-                    fh.Div({"data-sample-id": str(sample.id)}, card),   
+                    card,  # Remove outer div since sample ID is now in render_image_card
                     history,
                     style="grid-template-columns: 3fr 1fr",
                 ),
