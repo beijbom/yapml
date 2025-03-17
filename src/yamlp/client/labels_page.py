@@ -129,13 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Store the original color
         picker.setAttribute('data-original-color', picker.value);
         
-        // Preview the color change on input (before submitting)
-        picker.addEventListener('input', function(event) {
-            const labelId = this.getAttribute('data-label-id');
-            const newColor = this.value;
-            const labelCard = document.querySelector(`[data-label-id="${labelId}"]`); 
-        });
-        
         // Submit the color change on change (when picker is closed)
         picker.addEventListener('change', function(event) {
             const labelId = this.getAttribute('data-label-id');
@@ -187,7 +180,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                 fh.Article(
                     fh.Form(
                         {
-                            "action": "/api/v1/labels",
+                            "action": "/api/v1/labels-form",
                             "method": "post",
                             "enctype": "application/x-www-form-urlencoded",
                         },
@@ -200,24 +193,10 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                     ),
                     style="margin-bottom: 20px;",
                 ),
-                fh.Div(
-                    {"class": "grid"},
+                fh.Grid(
                     *[
                         fh.Article(
-                            {
-                                "style": f"""
-                                    border-left: 5px solid {label.color}; 
-                                    padding: 10px; 
-                                    margin-bottom: 10px; 
-                                    position: relative;
-                                    background-color: {label.color}20;
-                                """.replace(
-                                    "\n", ""
-                                ),
-                                "data-label-id": f"{label.id}",
-                            },
                             fh.Div(
-                                {"style": "display: flex; align-items: center; gap: 10px;"},
                                 fh.H4(
                                     label.name,
                                     cls="label-name",
@@ -225,13 +204,10 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                     title="Double-click to edit",
                                 ),
                                 fh.Input(
-                                    {
-                                        "type": "color",
-                                        "value": label.color,
-                                        "class": "label-color-picker",
-                                        "data-label-id": f"{label.id}",
-                                        "style": "width: 30px; height: 30px; padding: 0; border: none; cursor: pointer;",
-                                    }
+                                    type="color",
+                                    cls="label-color-picker",
+                                    value=label.color,
+                                    data_label_id=f"{label.id}",
                                 ),
                                 fh.Small(
                                     f"{len(suppress_stale_boxes(label.boxes))} annotations",
@@ -239,39 +215,18 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                 ),
                             ),
                             fh.Button(
-                                {
-                                    "class": "delete-label-btn",
-                                    "data-label-id": f"{label.id}",
-                                    "style": """
-                                        position: absolute;
-                                        bottom: 5px;
-                                        right: 5px;
-                                        background: none;
-                                        border: none;
-                                        padding: 5px;
-                                        cursor: pointer;
-                                        color: #6c757d;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        transition: color 0.2s;
-                                        opacity: 0.6;
-                                    """.replace(
-                                        "\n", ""
-                                    ),
-                                    "title": "Delete label",
-                                    "onmouseover": "this.style.opacity='1'; this.style.color='#dc3545'",
-                                    "onmouseout": "this.style.opacity='0.6'; this.style.color='#6c757d'",
-                                },
-                                fh.NotStr(
-                                    """
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                    </svg>
-                                """
-                                ),
+                                "Delete",
+                                cls="delete-label-btn",
+                                data_label_id=f"{label.id}",
+                                title="Delete label",
                             ),
+                            style=f"""
+                                border-left: 5px solid {yamlp_gray_color};
+                                padding: 10px;
+                                margin-bottom: 10px;
+                                position: relative;
+                                background-color: {yamlp_gray_color}20;
+                            """,
                         )
                         for label in labels
                     ],
