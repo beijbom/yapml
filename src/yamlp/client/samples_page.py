@@ -3,7 +3,8 @@ from datetime import datetime
 import fasthtml.common as fh
 from pydantic import BaseModel
 
-from yamlp.datamodel import BoundingBox, ObjectDetectionSample, suppress_stale_boxes
+from yamlp.client.styles import gray_color
+from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -370,25 +371,21 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
 def render_sample_history(boxes: list[BoundingBox], sample_id: int):
     changes = boxes_to_changes(boxes)
     return fh.Div(
-        {
-            "id": "history-section",
-            "hx-get": f"/samples/{sample_id}/history",
-            "hx-trigger": "boxUpdated from:body",
-            "hx-swap": "outerHTML",
-            "style": "padding: 10px;",
-        },
         fh.Ul(
-            {"style": "list-style-type: none; padding-left: 0; margin: 0;"},
             *[
                 fh.Li(
-                    {"style": "padding: 3px 0; border-bottom: 1px solid #eee; font-size: 0.9em;"},
                     fh.Strong(f"{change.label_name} "),
                     f"{change.event} by {change.annotator_name} ",
-                    fh.Small({"style": "color: #6c757d;"}, change.time_delta),
+                    fh.Small(change.time_delta, style=f"color: {gray_color};"),
+                    style="padding: 3px 0; font-size: 0.9em;",
                 )
                 for change in changes[::-1]
             ],
         ),
+        id="history-section",
+        hx_get=f"/samples/{sample_id}/history",
+        hx_trigger="boxUpdated from:body",
+        hx_swap="outerHTML",
     )
 
 
@@ -397,7 +394,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
     page = fh.Html(
         fh.Head(
             fh.Title("Yet Another ML Platform"),
-            fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
+            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
         ),
@@ -406,7 +403,6 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                 {"class": "container"},
                 fh.H1("Yet Another ML Platform"),
                 fh.Nav(
-                    {"style": "margin-bottom: 20px;"},
                     fh.Ul(
                         fh.Li(fh.A({"href": "/samples"}, "Samples")),
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
@@ -417,11 +413,9 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                         fh.Div(
                             render_image_card(sample),
                             fh.A(
-                                {
-                                    "href": f"/samples/{sample.id}",
-                                    "style": "display:block; text-align:right; margin-top:5px;",
-                                },
                                 "Details →",
+                                href=f"/samples/{sample.id}",
+                                style="display:block; text-align:left; margin-top:5px;",
                             ),
                         )
                         for sample in samples
@@ -433,24 +427,23 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
     return page
 
 
-def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
+def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh.Html:
     history = render_sample_history(list(sample.boxes), sample.id)
     card = render_image_card(sample)
 
     page = fh.Html(
         fh.Head(
             fh.Title("Sample image page"),
-            fh.Link({"rel": "stylesheet", "href": "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"}),
+            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
-            fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),  # Add HTMX
+            fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
         ),
         fh.Body(
             fh.Main(
                 {"class": "container"},
                 fh.H1("Sample image page"),
                 fh.Nav(
-                    {"style": "margin-bottom: 20px;"},
                     fh.Ul(
                         fh.Li(fh.A({"href": "/samples"}, "Samples")),
                         fh.Li(fh.A({"href": "/labels"}, "Labels")),
@@ -459,7 +452,7 @@ def render_sample_page(sample: ObjectDetectionSample) -> fh.Html:
                 fh.Grid(
                     card,
                     history,
-                    style="grid-template-columns: 2fr 1fr; gap: 20px;",  # Set left column to 2/3 and right column to 1/3 width
+                    style="grid-template-columns: 3fr 1fr",
                 ),
             )
         ),
