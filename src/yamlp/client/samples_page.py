@@ -423,6 +423,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                 ),
             )
         ),
+        data_theme="dark",
     )
     return page
 
@@ -456,5 +457,6 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                 ),
             )
         ),
+        data_theme="dark",
     )
     return page
