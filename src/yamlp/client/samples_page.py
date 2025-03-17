@@ -740,7 +740,7 @@ def render_sample_page(sample: ObjectDetectionSample, labels: list[Label]) -> fh
                     ),
                 ),
                 fh.Grid(
-                    fh.Div({"data-sample-id": str(sample.id)}, card),
+                    fh.Div({"data-sample-id": str(sample.id)}, card),   
                     history,
                     style="grid-template-columns: 3fr 1fr",
                 ),
