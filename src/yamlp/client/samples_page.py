@@ -3,6 +3,7 @@ from datetime import datetime
 import fasthtml.common as fh
 from pydantic import BaseModel
 
+from yamlp.client.navbar import navbar
 from yamlp.client.styles import yamlp_gray_color
 from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
 
@@ -690,38 +691,43 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
 
 
 def render_sample_list_page(samples: list[ObjectDetectionSample]):
+    main = (
+        fh.Main(
+            fh.H1("Samples"),
+            fh.Grid(
+                *[
+                    fh.Div(
+                        render_image_card(sample),
+                        fh.A(
+                            "Details →",
+                            href=f"/samples/{sample.id}",
+                            style="display:block; text-align:left; margin-top:5px;",
+                        ),
+                    )
+                    for sample in samples
+                ],
+            ),
+            style="padding: 2rem;",
+        ),
+    )
+
+    body = (
+        fh.Div(
+            navbar,
+            main,
+            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
+        ),
+    )
 
     page = fh.Html(
         fh.Head(
-            fh.Title("Samples"),
+            fh.Title("Samples - Yet Another ML Platform"),
             fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
             fh.Style(DRAG_STYLE),
             fh.Script(DRAG_SCRIPT),
         ),
         fh.Body(
-            fh.Main(
-                {"class": "container"},
-                fh.H1("Yet Another ML Platform"),
-                fh.Nav(
-                    fh.Ul(
-                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
-                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
-                    ),
-                ),
-                fh.Grid(
-                    *[
-                        fh.Div(
-                            render_image_card(sample),
-                            fh.A(
-                                "Details →",
-                                href=f"/samples/{sample.id}",
-                                style="display:block; text-align:left; margin-top:5px;",
-                            ),
-                        )
-                        for sample in samples
-                    ],
-                ),
-            ),
+            body,
         ),
         data_theme="dark",
     )
