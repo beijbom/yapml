@@ -421,7 +421,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
                                     "href": f"/samples/{sample.id}",
                                     "style": "display:block; text-align:right; margin-top:5px;",
                                 },
-                                f"Details →",
+                                "Details →",
                             ),
                         )
                         for sample in samples

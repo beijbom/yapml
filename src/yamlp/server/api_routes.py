@@ -1,9 +1,9 @@
+import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
-from sqlalchemy.orm import selectinload
+from pydantic import BaseModel, field_validator
 from sqlmodel import select
 
 from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 
 
 @router.get("/samples")
-async def get_samples(request: Request) -> list[ObjectDetectionSample]:
+async def list_samples(request: Request) -> list[ObjectDetectionSample]:
     session = request.state.session
 
     query = select(ObjectDetectionSample)
@@ -31,7 +31,7 @@ async def get_sample(request: Request, sample_id: int) -> ObjectDetectionSample:
 
 
 @router.get("/labels")
-async def get_labels(request: Request) -> list[Label]:
+async def list_labels(request: Request) -> list[Label]:
     session = request.state.session
     query = select(Label)
     results = session.exec(query).all()
@@ -41,6 +41,12 @@ async def get_labels(request: Request) -> list[Label]:
 class LabelCreate(BaseModel):
     name: str
     color: str
+
+    @field_validator("color")
+    def validate_color(cls, v):
+        if not re.match(r"^#[0-9A-Fa-f]{6}$", v):
+            raise ValueError("Color must be a valid hex code (e.g., #FF0000)")
+        return v
 
 
 @router.post("/labels", response_model=Label)
@@ -151,3 +157,42 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
     session.commit()
     session.refresh(new_box)
     return new_box
+
+
+class BoxCreate(BaseModel):
+    sample_id: int
+    label_id: int
+    center_x: float
+    center_y: float
+    width: float
+    height: float
+    annotator_name: str = "A User"  # Default value if not provided
+
+
+@router.post("/boxes", response_model=BoundingBox)
+async def create_box(request: Request, box_data: BoxCreate) -> BoundingBox:
+    session = request.state.session
+
+    # Verify sample and label exist
+    sample = session.get(ObjectDetectionSample, box_data.sample_id)
+    if not sample:
+        raise HTTPException(status_code=404, detail="Sample not found")
+
+    label = session.get(Label, box_data.label_id)
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    # Create new box
+    box = BoundingBox(
+        sample_id=box_data.sample_id,
+        label_id=box_data.label_id,
+        center_x=box_data.center_x,
+        center_y=box_data.center_y,
+        width=box_data.width,
+        height=box_data.height,
+        annotator_name=box_data.annotator_name,
+    )
+    session.add(box)
+    session.commit()
+    session.refresh(box)
+    return box
