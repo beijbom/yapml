@@ -3,8 +3,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, field_validator
+from pydantic import AfterValidator, BaseModel
 from sqlmodel import select
+from typing_extensions import Annotated
 
 from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
 from yamlp.db import get_session
@@ -38,15 +39,13 @@ async def list_labels(request: Request) -> list[Label]:
     return results
 
 
+def is_hex_color(v: str) -> bool:
+    return re.match(r"^#[0-9A-Fa-f]{6}$", v) is not None
+
+
 class LabelCreate(BaseModel):
     name: str
-    color: str
-
-    @field_validator("color")
-    def validate_color(cls, v):
-        if not re.match(r"^#[0-9A-Fa-f]{6}$", v):
-            raise ValueError("Color must be a valid hex code (e.g., #FF0000)")
-        return v
+    color: Annotated[str, AfterValidator(is_hex_color)]
 
 
 @router.post("/labels", response_model=Label)

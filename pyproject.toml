@@ -18,6 +18,7 @@ dependencies = [
     "lancedb>=0.21.1",
     "modal>=0.73.67",
     "pillow>=11.1.0",
+    "pydantic>=2.10.6",
     "pytest>=8.3.5",
     "python-fasthtml>=0.12.1",
     "requests>=2.32.3",
