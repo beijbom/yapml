@@ -1,19 +1,19 @@
 import pytest
 
-from yamlp.datamodel import BoundingBox, Image
+from yamlp.datamodel import BoundingBox, ObjectDetectionSample
 
 
 @pytest.fixture
 def test_box(test_session):
     """Create a test image and box"""
     # Create test image
-    image = Image(filename="test.jpg", width=100, height=100)
-    test_session.add(image)
+    sample = ObjectDetectionSample(filename="test.jpg", width=100, height=100)
+    test_session.add(sample)
     test_session.commit()
 
     # Create test box
     box = BoundingBox(
-        image_id=image.id, center_x=0.1, center_y=0.1, width=0.1, height=0.1, label_name="cat", annotator_name="test"
+        sample_id=sample.id, center_x=0.1, center_y=0.1, width=0.1, height=0.1, label_name="cat", annotator_name="test"
     )
     test_session.add(box)
     test_session.commit()

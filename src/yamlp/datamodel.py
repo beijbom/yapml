@@ -12,13 +12,13 @@ class BoundingBox(SQLModel, table=True):
     height: float
     label_name: str
     annotator_name: str
-    image_id: int = Field(foreign_key="image.id")
+    sample_id: int = Field(foreign_key="objectdetectionsample.id")
     created_at: datetime = Field(default_factory=datetime.now)
     previous_box_id: Optional[int] = Field(default=None, foreign_key="boundingbox.id", unique=True)
-    image: "Image" = Relationship(back_populates="boxes")
+    sample: "ObjectDetectionSample" = Relationship(back_populates="boxes")
 
 
-class Image(SQLModel, table=True):
+class ObjectDetectionSample(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
     url: str
@@ -26,7 +26,7 @@ class Image(SQLModel, table=True):
     height: int
     created_at: datetime = Field(default_factory=datetime.now)
     deleted_at: Optional[datetime] = Field(default=None)
-    boxes: list[BoundingBox] = Relationship(back_populates="image")
+    boxes: list[BoundingBox] = Relationship(back_populates="sample")
 
 
 def suppress_stale_boxes(boxes: list[BoundingBox]) -> list[BoundingBox]:

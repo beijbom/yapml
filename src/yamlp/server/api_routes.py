@@ -5,26 +5,26 @@ from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from yamlp.datamodel import BoundingBox, Image, suppress_stale_boxes
+from yamlp.datamodel import BoundingBox, ObjectDetectionSample
 from yamlp.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 
 
 @router.get("/samples")
-async def get_samples(request: Request) -> list[Image]:
+async def get_samples(request: Request) -> list[ObjectDetectionSample]:
     session = request.state.session
 
-    query = select(Image).options(selectinload(Image.boxes))
+    query = select(ObjectDetectionSample).options(selectinload(ObjectDetectionSample.boxes))
     results = session.exec(query).all()
     return results
 
 
-@router.get("/samples/{image_id}")
-async def get_sample(request: Request, image_id: int) -> Image:
+@router.get("/samples/{sample_id}")
+async def get_sample(request: Request, sample_id: int) -> ObjectDetectionSample:
     session = request.state.session
-    image = session.get(Image, image_id)
-    return image
+    sample = session.get(ObjectDetectionSample, sample_id)
+    return sample
 
 
 # Define the update schema
@@ -46,7 +46,7 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
         raise HTTPException(status_code=404, detail="Box not found")
 
     new_box = BoundingBox(
-        image_id=box.image_id,
+        sample_id=box.sample_id,
         previous_box_id=box.id,
         center_x=update_data.center_x if update_data.center_x else box.center_x,
         center_y=update_data.center_y if update_data.center_y else box.center_y,
