@@ -1,5 +1,6 @@
 import fasthtml.common as fh
 
+from yamlp.client.navbar import navbar
 from yamlp.client.styles import yamlp_gray_color
 from yamlp.datamodel import Label, suppress_stale_boxes
 
@@ -160,6 +161,71 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
     Returns:
         An HTML page showing all labels
     """
+
+    main = (
+        fh.Main(
+            fh.H1("Labels"),
+            fh.Form(
+                fh.Grid(
+                    fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
+                    fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
+                    fh.Button({"type": "submit"}, "Create Label"),
+                ),
+                action="/api/v1/labels-form",
+                method="post",
+                enctype="application/x-www-form-urlencoded",
+            ),
+            fh.Grid(
+                *[
+                    fh.Article(
+                        fh.Div(
+                            fh.H4(
+                                label.name,
+                                cls="label-name",
+                                style="margin: 0; cursor: pointer;",
+                                title="Double-click to edit",
+                            ),
+                            fh.Input(
+                                type="color",
+                                cls="label-color-picker",
+                                value=label.color,
+                                data_label_id=f"{label.id}",
+                            ),
+                            fh.Small(
+                                f"{len(suppress_stale_boxes(label.boxes))} annotations",
+                                style=f"margin-left: auto; color: {yamlp_gray_color};",
+                            ),
+                        ),
+                        fh.Button(
+                            "Delete",
+                            cls="delete-label-btn",
+                            data_label_id=f"{label.id}",
+                            title="Delete label",
+                        ),
+                        data_label_id=f"{label.id}",
+                        style=f"""
+                                        border-left: 5px solid {yamlp_gray_color};
+                                        padding: 10px;
+                                        margin-bottom: 10px;
+                                        position: relative;
+                                        background-color: {yamlp_gray_color}20;
+                                    """,
+                    )
+                    for label in labels
+                ],
+            ),
+            style="padding: 2rem;",
+        ),
+    )
+
+    body = (
+        fh.Div(
+            navbar,
+            main,
+            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
+        ),
+    )
+
     page = fh.Html(
         fh.Head(
             fh.Title("Labels - Yet Another ML Platform"),
@@ -167,65 +233,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
             fh.Script(COLOR_CHANGE_SCRIPT),
         ),
         fh.Body(
-            fh.Main(
-                fh.H1("Labels"),
-                fh.Nav(
-                    fh.Ul(
-                        fh.Li(fh.A({"href": "/samples"}, "Samples")),
-                        fh.Li(fh.A({"href": "/labels"}, "Labels")),
-                    ),
-                ),
-                fh.Form(
-                    fh.Grid(
-                        fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
-                        fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
-                        fh.Button({"type": "submit"}, "Create Label"),
-                    ),
-                    action="/api/v1/labels-form",
-                    method="post",
-                    enctype="application/x-www-form-urlencoded",
-                ),
-                fh.Grid(
-                    *[
-                        fh.Article(
-                            fh.Div(
-                                fh.H4(
-                                    label.name,
-                                    cls="label-name",
-                                    style="margin: 0; cursor: pointer;",
-                                    title="Double-click to edit",
-                                ),
-                                fh.Input(
-                                    type="color",
-                                    cls="label-color-picker",
-                                    value=label.color,
-                                    data_label_id=f"{label.id}",
-                                ),
-                                fh.Small(
-                                    f"{len(suppress_stale_boxes(label.boxes))} annotations",
-                                    style=f"margin-left: auto; color: {yamlp_gray_color};",
-                                ),
-                            ),
-                            fh.Button(
-                                "Delete",
-                                cls="delete-label-btn",
-                                data_label_id=f"{label.id}",
-                                title="Delete label",
-                            ),
-                            data_label_id=f"{label.id}",
-                            style=f"""
-                            border-left: 5px solid {yamlp_gray_color};
-                            padding: 10px;
-                            margin-bottom: 10px;
-                            position: relative;
-                            background-color: {yamlp_gray_color}20;
-                        """,
-                        )
-                        for label in labels
-                    ],
-                ),
-                cls="container",
-            )
+            body,
         ),
         data_theme="dark",
     )
