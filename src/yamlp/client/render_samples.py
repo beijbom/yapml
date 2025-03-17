@@ -243,7 +243,7 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
                     top:{top}px; 
                     width:{w}px; 
                     height:{h}px; 
-                    border:2px solid red; 
+                    border:2px solid {box.label.color}; 
                     background-color:rgba(255,0,0,0.2); 
                     box-sizing:border-box;
                     cursor:move;

@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-from yamlp.datamodel import Label
+from yamlp.datamodel import Label, suppress_stale_boxes
 
 # JavaScript for handling color changes
 COLOR_CHANGE_SCRIPT = """
@@ -116,7 +116,8 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                                     }
                                 ),
                                 fh.Small(
-                                    {"style": "margin-left: auto; color: #6c757d;"}, f"{len(label.boxes)} annotations"
+                                    {"style": "margin-left: auto; color: #6c757d;"},
+                                    f"{len(suppress_stale_boxes(label.boxes))} annotations",
                                 ),
                             ),
                         )
