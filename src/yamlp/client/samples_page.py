@@ -30,15 +30,15 @@ function initializeDraggable() {
     const images = document.querySelectorAll('img');
     images.forEach(image => {
         const boxes = image.parentElement.querySelectorAll('.draggable-box');
-        console.log('Found boxes:', boxes.length);
-        boxes.forEach(box => {
-            box.style.cursor = 'move';
-            box.addEventListener('mousedown', startDragging);
-            
-            // Add event listeners to resize handles
-            const handles = box.querySelectorAll('.resize-handle');
-            handles.forEach(handle => {
-                handle.addEventListener('mousedown', startResizing);
+    console.log('Found boxes:', boxes.length);
+    boxes.forEach(box => {
+        box.style.cursor = 'move';
+        box.addEventListener('mousedown', startDragging);
+        
+        // Add event listeners to resize handles
+        const handles = box.querySelectorAll('.resize-handle');
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', startResizing);
             });
         });
     });
@@ -496,82 +496,92 @@ DRAG_STYLE = """
 """
 
 
+def render_box(box, max_width, max_height):
+    # Calculate positions in pixels
+    x = box.center_x * max_width
+    y = box.center_y * max_height
+    w = box.width * max_width
+    h = box.height * max_height
+    left = x - w / 2
+    top = y - h / 2
+
+    # Create the box with all its components
+    return fh.Div(
+        {
+            "data-box-id": str(box.id),
+            "data-image-width": str(max_width),
+            "data-image-height": str(max_height),
+            "data-width": str(box.width),
+            "data-height": str(box.height),
+            "data-label": box.label.name,
+        },
+        cls="draggable-box",
+        style=f"""
+                position: absolute;
+                left: {left}px;
+                top: {top}px;
+                width: {w}px;
+                height: {h}px;
+                border: 2px solid {box.label.color};
+                    background-color: {box.label.color}20;
+                box-sizing: border-box;
+                cursor: move;
+                z-index: 10;
+            """,
+        *[
+            fh.Div(
+                box.label.name,
+                style="""
+                position: absolute;
+                bottom: 0px;
+                left: 0;
+                background-color: rgba(0,0,0,0.7);
+                color: white;
+                padding: 1px 5px;
+                font-size: 10px;
+                border-radius: 3px;
+                font-family: sans-serif;
+                z-index: 15;
+            """,
+            ),
+            # Resize handles
+            fh.Div(
+                {"data-direction": "nw"},
+                style="position:absolute; top:-5px; left:-5px; width:10px; height:10px; cursor:nw-resize; background:transparent;",
+                cls="resize-handle nw",
+            ),
+            fh.Div(
+                {"data-direction": "ne"},
+                style="position:absolute; top:-5px; right:-5px; width:10px; height:10px; cursor:ne-resize; background:transparent;",
+                cls="resize-handle ne",
+            ),
+            fh.Div(
+                {"data-direction": "sw"},
+                style="position:absolute; bottom:-5px; left:-5px; width:10px; height:10px; cursor:sw-resize; background:transparent;",
+                cls="resize-handle sw",
+            ),
+            fh.Div(
+                {"data-direction": "se"},
+                style="position:absolute; bottom:-5px; right:-5px; width:10px; height:10px; cursor:se-resize; background:transparent;",
+                cls="resize-handle se",
+            ),
+        ],
+    )
+
+
 def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_height: int = 500) -> fh.Div:
     """
     Render an image with draggable and resizable bounding boxes.
-
-    Args:
-        sample: The image detection sample containing image and box data
-        width: Display width of the image
-        height: Display height of the image
-
-    Returns:
-        A div containing the image and interactive boxes
     """
-
-    # Create box HTML directly to avoid issues with fh.Div
-    box_html = ""
-    for box in suppress_stale_boxes(sample.boxes):
-        # Calculate positions in pixels
-        x = box.center_x * max_width
-        y = box.center_y * max_height
-        w = box.width * max_width
-        h = box.height * max_height
-        left = x - w / 2
-        top = y - h / 2
-
-        # Create box with invisible resize handles
-        box_html += f"""
-        <div class="draggable-box" 
-             data-box-id="{box.id}"
-             data-image-width="{max_width}"
-             data-image-height="{max_height}"
-             data-width="{box.width}"
-             data-height="{box.height}"
-             data-label="{box.label.name}"
-             style="position:absolute; 
-                    left:{left}px; 
-                    top:{top}px; 
-                    width:{w}px; 
-                    height:{h}px; 
-                    border:2px solid {box.label.color}; 
-                    background-color: {box.label.color}20;
-                    box-sizing:border-box;
-                    cursor:move;
-                    z-index:10;">
-            <!-- Label name at bottom left -->
-            <div style="position:absolute; 
-                        bottom:-20px; 
-                        left:0; 
-                        background-color:rgba(0,0,0,0.7); 
-                        color:white; 
-                        padding:2px 5px; 
-                        font-size:12px; 
-                        border-radius:2px;
-                        font-family:sans-serif;
-                        z-index:15;">
-                {box.label.name}
-            </div>
-            <!-- Invisible resize handles - just for cursor change and interaction -->
-            <div class="resize-handle nw" data-direction="nw" style="position:absolute; top:-5px; left:-5px; width:10px; height:10px; cursor:nw-resize; background:transparent;"></div>
-            <div class="resize-handle ne" data-direction="ne" style="position:absolute; top:-5px; right:-5px; width:10px; height:10px; cursor:ne-resize; background:transparent;"></div>
-            <div class="resize-handle sw" data-direction="sw" style="position:absolute; bottom:-5px; left:-5px; width:10px; height:10px; cursor:sw-resize; background:transparent;"></div>
-            <div class="resize-handle se" data-direction="se" style="position:absolute; bottom:-5px; right:-5px; width:10px; height:10px; cursor:se-resize; background:transparent;"></div>
-        </div>
-        """
-
-    # Create the parent container with the image
     parent_div = fh.Div(
-        style=f"position:relative; width:{max_width}px; height:{max_height}px;",
-        **{"data-sample-id": str(sample.id)},  # Add sample ID to the image container
+        style=f"position:relative; width:{max_width}px; height:{max_height}px;", **{"data-sample-id": str(sample.id)}
     )
 
     img = fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;")
 
-    # Add raw HTML for boxes
-    raw_html = fh.NotStr(box_html)
+    boxes = [render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)]
 
-    return parent_div(img, raw_html)
+    return parent_div(img, *boxes)
 
 
 class BoxChange(BaseModel):
