@@ -214,12 +214,12 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                             ),
                             data_label_id=f"{label.id}",
                             style=f"""
-                                border-left: 5px solid {yamlp_gray_color};
-                                padding: 10px;
-                                margin-bottom: 10px;
-                                position: relative;
-                                background-color: {yamlp_gray_color}20;
-                            """,
+                            border-left: 5px solid {yamlp_gray_color};
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            position: relative;
+                            background-color: {yamlp_gray_color}20;
+                        """,
                         )
                         for label in labels
                     ],
@@ -227,5 +227,6 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                 cls="container",
             )
         ),
+        data_theme="dark",
     )
     return page
