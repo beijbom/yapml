@@ -1,6 +1,5 @@
 import pytest
-
-from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
+from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 
 
 @pytest.fixture

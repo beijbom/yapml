@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel, create_engine
-from yamlp.config import sqlite_file_name, sqlite_url
-from yamlp.fixtures import populate_db
-from yamlp.server.api_routes import router as api_router
-from yamlp.server.ui_routes import router as ui_router
+from yapml.config import sqlite_file_name, sqlite_url
+from yapml.fixtures import populate_db
+from yapml.server.api_routes import router as api_router
+from yapml.server.ui_routes import router as ui_router
 
 web_app = FastAPI()
 
@@ -30,6 +30,7 @@ async def reset_db() -> HTMLResponse:
 
 
 # This should be at app initialization, not in the reset_db function
+os.makedirs("/data/images", exist_ok=True)
 web_app.mount("/images", StaticFiles(directory="/data/images"), name="images")
 
 web_app.include_router(api_router)

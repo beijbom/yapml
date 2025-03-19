@@ -2,10 +2,9 @@ from datetime import datetime
 
 import fasthtml.common as fh
 from pydantic import BaseModel
-
-from yamlp.client.navbar import navbar
-from yamlp.client.styles import yamlp_gray_color
-from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
+from yapml.client.navbar import navbar
+from yapml.client.styles import yapml_gray_color
+from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -677,7 +676,7 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
                 fh.Li(
                     fh.Strong(f"{change.label_name} "),
                     f"{change.event} by {change.annotator_name} ",
-                    fh.Small(change.time_delta, style=f"color: {yamlp_gray_color};"),
+                    fh.Small(change.time_delta, style=f"color: {yapml_gray_color};"),
                     style="padding: 3px 0; font-size: 0.9em;",
                 )
                 for change in changes[::-1]

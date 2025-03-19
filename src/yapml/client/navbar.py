@@ -1,5 +1,5 @@
 import fasthtml.common as fh
-from yamlp.client.styles import yamlp_gray_color
+from yapml.client.styles import yapml_gray_color
 
 navbar = fh.Aside(
     fh.Nav(
@@ -8,5 +8,5 @@ navbar = fh.Aside(
             fh.Li(fh.A({"href": "/labels"}, "Labels")),
         ),
     ),
-    style=f"padding: 1rem; background-color: {yamlp_gray_color}20;",
+    style=f"padding: 1rem; background-color: {yapml_gray_color}20;",
 )

@@ -1,4 +1,4 @@
-# YetAnotherMachineLearningPlatform
+# YAP-ML
 
 An open-source full-stack Machine Learning Platform build on Modal.
 
@@ -13,11 +13,11 @@ An open-source full-stack Machine Learning Platform build on Modal.
 
 ### Run dev server
 
-`uv run modal serve -m src.yamlp.yamlp`
+`uv run modal serve -m src.yapml.yapml`
 
 ### Deploy to prod
 
-`uv run modal deploy -m src.yamlp.yamlp`
+`uv run modal deploy -m src.yapml.yapml`
 
 ### Run tests
 
