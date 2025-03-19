@@ -1,10 +1,10 @@
 import os
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import SQLModel, create_engine
-from yapml.config import sqlite_file_name, sqlite_url
+from sqlmodel import SQLModel
+from yapml.db import engine
 from yapml.fixtures import populate_db
 from yapml.server.api_routes import router as api_router
 from yapml.server.ui_routes import router as ui_router
@@ -12,21 +12,19 @@ from yapml.server.ui_routes import router as ui_router
 web_app = FastAPI()
 
 
-@web_app.get("/reset_db", response_class=HTMLResponse)
-async def reset_db() -> HTMLResponse:
-    # First ensure the directory exists
-    os.makedirs("/data/images", exist_ok=True)
+@web_app.post("/api/reset-db")
+async def reset_db() -> JSONResponse:
+    try:
+        # Drop all tables
+        SQLModel.metadata.drop_all(engine)
 
-    # Remove old database if it exists
-    if os.path.exists(sqlite_file_name):
-        os.remove(sqlite_file_name)
+        # Create new tables
+        SQLModel.metadata.create_all(engine)
+        populate_db()
 
-    # Create new database and populate it
-    engine = create_engine(sqlite_url)
-    SQLModel.metadata.create_all(engine)
-    populate_db()
-
-    return HTMLResponse("<h1>Database was reset.</h1>")
+        return JSONResponse({"status": "success", "message": "Database was reset successfully"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 
 # This should be at app initialization, not in the reset_db function

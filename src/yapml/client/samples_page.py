@@ -4,7 +4,7 @@ import fasthtml.common as fh
 from pydantic import BaseModel
 from yapml.client.navbar import navbar
 from yapml.client.styles import yapml_gray_color
-from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample, suppress_stale_boxes
+from yapml.datamodel import BoundingBox, ObjectDetectionSample, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
