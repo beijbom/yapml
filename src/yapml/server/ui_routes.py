@@ -1,9 +1,13 @@
+import os
+
 import fasthtml.common as fh
 import yapml.client as client
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
+from sqlmodel import SQLModel
 from yapml.config import favicon_path
-from yapml.db import get_session
+from yapml.db import engine, get_session
+from yapml.fixtures import populate_db
 from yapml.server.api_routes import get_sample, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
@@ -46,3 +50,8 @@ async def get_history(request: Request, sample_id: int) -> HTMLResponse:
 @router.get("/favicon.ico", include_in_schema=False)
 async def favicon() -> FileResponse:
     return FileResponse(favicon_path)
+
+
+@router.get("/admin", response_class=HTMLResponse)
+async def admin_page() -> HTMLResponse:
+    return HTMLResponse(fh.to_xml(client.render_admin_page()))

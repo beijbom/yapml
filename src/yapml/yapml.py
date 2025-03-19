@@ -1,8 +1,8 @@
-import os
-
 import modal
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlmodel import SQLModel
+from yapml.db import engine
 from yapml.server.webapp import web_app
 
 volume = modal.Volume.from_name("yapml", create_if_missing=True)
@@ -27,6 +27,7 @@ app = modal.App(name="yapml", image=modal_image)
 )
 @modal.asgi_app()
 def index() -> FastAPI:
-    os.makedirs("/data/images", exist_ok=True)
+
+    SQLModel.metadata.create_all(engine)
     web_app.mount("/images", StaticFiles(directory="/data/images"), name="images")
     return web_app

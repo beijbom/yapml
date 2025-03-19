@@ -9,7 +9,7 @@ An open-source full-stack Machine Learning Platform build on Modal.
 * Install the `uv` python manager <https://docs.astral.sh/uv/getting-started/installation/>
 * Create a modal account <https://modal.com/>
 * Configure your modal account `uv run modal config`
-* Add the `src/` folder to your PYTHONPATH. E.g. `export PYTHONPATH=path/to/this/repo/src`
+* Add the `src/` folder to your PYTHONPATH. E.g. `export PYTHONPATH=<path/to/this/repo>/src`
 
 ### Run dev server
 

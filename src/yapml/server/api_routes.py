@@ -2,12 +2,13 @@ import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import AfterValidator, BaseModel
-from sqlmodel import select
+from sqlmodel import SQLModel, select
 from typing_extensions import Annotated
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
-from yapml.db import get_session
+from yapml.db import engine, get_session
+from yapml.fixtures import populate_db
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 
@@ -194,3 +195,18 @@ async def create_box(request: Request, box_data: BoxCreate) -> BoundingBox:
     session.commit()
     session.refresh(box)
     return box
+
+
+@router.post("/reset-db")
+async def reset_db() -> JSONResponse:
+    try:
+        # Drop all tables
+        SQLModel.metadata.drop_all(engine)
+
+        # Create new tables
+        SQLModel.metadata.create_all(engine)
+        populate_db()
+
+        return JSONResponse({"status": "success", "message": "Database was reset successfully"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
