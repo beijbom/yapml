@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from yamlp.server.webapp import web_app
 
-app = modal.App(name="yamlp")
 volume = modal.Volume.from_name("YAMLP", create_if_missing=True)
 
 
@@ -16,8 +15,14 @@ modal_image = (
     .add_local_dir("static", remote_path="/static")
 )
 
+app = modal.App(name="yamlp", image=modal_image)
 
-@app.function(image=modal_image, container_idle_timeout=60, volumes={"/data": volume})
+
+@app.function(
+    volumes={"/data": volume},
+    max_containers=1,
+    allow_concurrent_inputs=5,
+)
 @modal.asgi_app()
 def index() -> FastAPI:
     web_app.mount("/images", StaticFiles(directory="/data/images"), name="images")
