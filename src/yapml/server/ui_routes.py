@@ -1,11 +1,10 @@
 import fasthtml.common as fh
+import yapml.client as client
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
-
-import yamlp.client as client
-from yamlp.config import favicon_path
-from yamlp.db import get_session
-from yamlp.server.api_routes import get_sample, list_labels, list_samples
+from yapml.config import favicon_path
+from yapml.db import get_session
+from yapml.server.api_routes import get_sample, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 

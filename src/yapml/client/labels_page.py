@@ -1,8 +1,7 @@
 import fasthtml.common as fh
-
-from yamlp.client.navbar import navbar
-from yamlp.client.styles import yamlp_gray_color
-from yamlp.datamodel import Label, suppress_stale_boxes
+from yapml.client.navbar import navbar
+from yapml.client.styles import yapml_gray_color
+from yapml.datamodel import Label, suppress_stale_boxes
 
 # JavaScript for handling color changes and name edits
 COLOR_CHANGE_SCRIPT = """
@@ -193,7 +192,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                             ),
                             fh.Small(
                                 f"{len(suppress_stale_boxes(label.boxes))} annotations",
-                                style=f"margin-left: auto; color: {yamlp_gray_color};",
+                                style=f"margin-left: auto; color: {yapml_gray_color};",
                             ),
                         ),
                         fh.Button(
@@ -204,11 +203,11 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
                         ),
                         data_label_id=f"{label.id}",
                         style=f"""
-                                        border-left: 5px solid {yamlp_gray_color};
+                                        border-left: 5px solid {yapml_gray_color};
                                         padding: 10px;
                                         margin-bottom: 10px;
                                         position: relative;
-                                        background-color: {yamlp_gray_color}20;
+                                        background-color: {yapml_gray_color}20;
                                     """,
                     )
                     for label in labels

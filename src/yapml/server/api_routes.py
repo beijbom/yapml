@@ -6,8 +6,8 @@ from fastapi.responses import RedirectResponse
 from pydantic import AfterValidator, BaseModel
 from sqlmodel import select
 from typing_extensions import Annotated
-from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
-from yamlp.db import get_session
+from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
+from yapml.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 

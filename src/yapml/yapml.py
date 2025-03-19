@@ -1,3 +1,5 @@
+import os
+
 import modal
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -25,5 +27,6 @@ app = modal.App(name="yapml", image=modal_image)
 )
 @modal.asgi_app()
 def index() -> FastAPI:
+    os.makedirs("/data/images", exist_ok=True)
     web_app.mount("/images", StaticFiles(directory="/data/images"), name="images")
     return web_app

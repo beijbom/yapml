@@ -3,9 +3,8 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
-
-from yamlp.db import get_session
-from yamlp.server.webapp import web_app
+from yapml.db import get_session
+from yapml.server.webapp import web_app
 
 
 @pytest.fixture(scope="session")

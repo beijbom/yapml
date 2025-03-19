@@ -1,6 +1,6 @@
 from fastapi import Request
 from sqlmodel import Session, create_engine
-from yamlp.config import sqlite_url
+from yapml.config import sqlite_url
 
 engine = create_engine(
     sqlite_url,

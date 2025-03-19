@@ -1,1 +1,1 @@
-yamlp_gray_color = "#6c757d"
+yapml_gray_color = "#6c757d"
