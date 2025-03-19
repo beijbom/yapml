@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 from yamlp.client.styles import yamlp_gray_color
 
 navbar = fh.Aside(

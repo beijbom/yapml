@@ -1,12 +1,9 @@
 import os
-import time
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel, create_engine
-
 from yamlp.config import sqlite_file_name, sqlite_url
 from yamlp.fixtures import populate_db
 from yamlp.server.api_routes import router as api_router

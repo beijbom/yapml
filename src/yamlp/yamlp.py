@@ -1,7 +1,6 @@
 import modal
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-
 from yamlp.server.webapp import web_app
 
 app = modal.App(name="yamlp")

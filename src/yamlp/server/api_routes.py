@@ -6,7 +6,6 @@ from fastapi.responses import RedirectResponse
 from pydantic import AfterValidator, BaseModel
 from sqlmodel import select
 from typing_extensions import Annotated
-
 from yamlp.datamodel import BoundingBox, Label, ObjectDetectionSample
 from yamlp.db import get_session
 
