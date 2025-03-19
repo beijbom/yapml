@@ -1,4 +1,4 @@
-# YetAnotherMachineLearningPlatform
+# YAP-ML
 
 An open-source full-stack Machine Learning Platform build on Modal.
 
