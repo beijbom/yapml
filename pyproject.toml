@@ -6,7 +6,7 @@ select = ["E", "F", "I"]
 line-length = 120
 
 [project]
-name = "yamlp"
+name = "yap-ml"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
