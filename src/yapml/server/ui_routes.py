@@ -1,13 +1,10 @@
-import os
-
 import fasthtml.common as fh
-import yapml.client as client
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
-from sqlmodel import SQLModel
+
+import yapml.client as client
 from yapml.config import favicon_path
-from yapml.db import engine, get_session
-from yapml.fixtures import populate_db
+from yapml.db import get_session
 from yapml.server.api_routes import get_sample, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])

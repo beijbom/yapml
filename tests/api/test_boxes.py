@@ -1,4 +1,5 @@
 import pytest
+
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 
 
@@ -44,6 +45,17 @@ def test_update_box(client, test_box):
 
 def test_create_box(client, test_session):
     """Test creating a box"""
+
+    sample = ObjectDetectionSample(
+        filename="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100
+    )
+    test_session.add(sample)
+    test_session.commit()
+
+    # Create test label
+    label = Label(name="cat", color="#FF0000")
+    test_session.add(label)
+    test_session.commit()
 
     sample = test_session.get(ObjectDetectionSample, 1)
     label = test_session.get(Label, 1)

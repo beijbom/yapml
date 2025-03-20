@@ -1,14 +1,31 @@
+import re
 from datetime import datetime
 from typing import Optional
 
+from pydantic import AfterValidator
 from sqlmodel import Field, Relationship, SQLModel
+from typing_extensions import Annotated
+
+
+def is_valid_hex_color(v: str) -> str:
+    if not re.match(r"^#[0-9A-Fa-f]{6}$", v):
+        raise ValueError("Invalid hex color format. Must be #RRGGBB")
+    return v
+
+
+def is_valid_label_name(v: str) -> str:
+    if not re.match(r"^[a-zA-Z0-9_]+$", v):
+        raise ValueError("Name must contain only alphanumeric characters and underscores")
+    return v
 
 
 class Label(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(unique=True)
-    color: str  #  hex color code
-    boxes: list["BoundingBox"] = Relationship(back_populates="label")
+    name: Annotated[str, AfterValidator(is_valid_label_name)] = Field(unique=True)
+    color: Annotated[str, AfterValidator(is_valid_hex_color)] = Field(unique=True)
+    boxes: list["BoundingBox"] = Relationship(
+        back_populates="label", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 
 class BoundingBox(SQLModel, table=True):

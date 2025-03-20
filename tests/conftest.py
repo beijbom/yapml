@@ -3,6 +3,7 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
+
 from yapml.db import get_session
 from yapml.server.webapp import web_app
 
@@ -40,3 +41,10 @@ def client(test_session):
         yield client
 
     web_app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True, scope="function")
+def clear_db(test_engine):
+    """Clear the database before each test"""
+    SQLModel.metadata.drop_all(test_engine)
+    SQLModel.metadata.create_all(test_engine)
