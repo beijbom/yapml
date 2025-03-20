@@ -1,12 +1,11 @@
-import re
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import AfterValidator, BaseModel
 from sqlmodel import SQLModel, select
-from typing_extensions import Annotated
-from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
+
+from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample, is_valid_hex_color, is_valid_label_name
 from yapml.db import engine, get_session
 from yapml.fixtures import populate_db
 
@@ -39,17 +38,11 @@ async def list_labels(request: Request) -> list[Label]:
     return results
 
 
-def is_hex_color(v: str) -> bool:
-    return re.match(r"^#[0-9A-Fa-f]{6}$", v) is not None
-
-
-class LabelCreate(BaseModel):
-    name: str
-    color: Annotated[str, AfterValidator(is_hex_color)]
-
-
 @router.post("/labels", response_model=Label)
-async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
+async def create_label_json(
+    request: Request,
+    label_data: Annotated[Label, AfterValidator(Label.model_validate)],
+) -> Label:
     session = request.state.session
 
     # Check if label with this name already exists
@@ -67,20 +60,19 @@ async def create_label_json(request: Request, label_data: LabelCreate) -> Label:
 
 # This is used for the form submission from the labels page.
 @router.post("/labels-form", include_in_schema=False)
-async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)):
-    session = request.state.session
-
-    # Check if label with this name already exists
-    existing = session.exec(select(Label).where(Label.name == name)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Label with this name already exists")
-
-    # Create new label
+async def create_label_form(request: Request, name: str = Form(...), color: str = Form(...)) -> RedirectResponse:
+    try:
+        is_valid_label_name(name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    try:
+        is_valid_hex_color(color)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     label = Label(name=name, color=color)
+    session = request.state.session
     session.add(label)
     session.commit()
-
-    # Redirect back to the labels page
     return RedirectResponse(url="/labels", status_code=303)
 
 
@@ -91,21 +83,28 @@ class LabelUpdate(BaseModel):
 
 @router.put("/labels/{label_id}")
 async def update_label(request: Request, label_id: int, update_data: LabelUpdate) -> Label:
+
     session = request.state.session
     label = session.get(Label, label_id)
     if not label:
         raise HTTPException(status_code=404, detail="Label not found")
 
-    # Check if name is being updated and if it already exists
+    if update_data.color is not None:
+        try:
+            is_valid_hex_color(update_data.color)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        label.color = update_data.color
+
     if update_data.name is not None:
+        try:
+            is_valid_label_name(update_data.name)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
         existing = session.exec(select(Label).where(Label.name == update_data.name)).first()
         if existing and existing.id != label_id:
             raise HTTPException(status_code=400, detail="Label with this name already exists")
         label.name = update_data.name
-
-    # Update the label color if provided
-    if update_data.color is not None:
-        label.color = update_data.color
 
     session.add(label)
     session.commit()
@@ -123,7 +122,9 @@ async def delete_label(request: Request, label_id: int):
     # Delete the label
     session.delete(label)
     session.commit()
-    return {"message": "Label deleted successfully"}
+
+    # Return empty response with 204 No Content status
+    return Response(status_code=204)
 
 
 # Define the update schema

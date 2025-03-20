@@ -2,8 +2,7 @@
 .sesskey
 .DS_Store
 .vscode/
-playground.py
-
+sandbox.*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
