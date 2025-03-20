@@ -72,7 +72,7 @@ def test_create_box(client, test_session):
             "annotator_name": "Test user",
         },
     )
-    assert response.status_code == 200
 
     data = response.json()
     print(data)
+    assert response.status_code == 200

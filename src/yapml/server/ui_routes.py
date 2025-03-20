@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 import yapml.client as client
 from yapml.config import favicon_path
 from yapml.db import get_session
-from yapml.server.api_routes import get_sample, list_labels, list_samples
+from yapml.server.api import get_sample, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 
