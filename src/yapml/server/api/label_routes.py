@@ -94,7 +94,7 @@ async def update_label(request: Request, label_id: int, update_data: LabelUpdate
 
 
 @router.delete("/labels/{label_id}")
-async def delete_label(request: Request, label_id: int):
+async def delete_label(request: Request, label_id: int) -> Response:
     session = request.state.session
     label = session.get(Label, label_id)
     if not label:
