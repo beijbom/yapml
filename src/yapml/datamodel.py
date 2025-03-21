@@ -55,12 +55,19 @@ class BoundingBox(SQLModel, table=True):
     label: Label = Relationship(back_populates="boxes")
 
 
+def is_valid_height_width(v: int) -> int:
+    if v <= 0:
+        raise ValueError("Height and width must be greater than 0")
+    return v
+
+
 class ObjectDetectionSample(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    filename: str
+    key: Optional[str] = Field(default=None)  # Optional key for the sample
+    image_hash: Optional[str] = Field(default=None, index=True, unique=True)  # Optional hash for the sample
     url: str
-    width: int
-    height: int
+    width: Annotated[int, AfterValidator(is_valid_height_width)]
+    height: Annotated[int, AfterValidator(is_valid_height_width)]
     created_at: datetime = Field(default_factory=datetime.now)
     deleted_at: Optional[datetime] = Field(default=None)
     boxes: list[BoundingBox] = Relationship(back_populates="sample")
