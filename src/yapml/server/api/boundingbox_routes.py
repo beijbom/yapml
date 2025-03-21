@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
 async def get_box(request: Request, box_id: int) -> BoundingBox:
     session = request.state.session
     box = session.get(BoundingBox, box_id)
+    if not box:
+        raise HTTPException(status_code=404, detail="Box not found")
     return box
 
 
