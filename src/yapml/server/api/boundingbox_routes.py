@@ -1,7 +1,5 @@
 # Define the update schema
-from curses import BUTTON1_DOUBLE_CLICKED
 from typing import Annotated, Optional
-from venv import create
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import AfterValidator, BaseModel, ValidationError
