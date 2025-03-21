@@ -21,6 +21,8 @@ def validate_label(label: Label) -> Label:
 async def get_label(request: Request, label_id: int) -> Label:
     session = request.state.session
     label = session.get(Label, label_id)
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
     return label
 
 
