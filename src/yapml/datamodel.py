@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, confloat
 from sqlmodel import Field, Relationship, SQLModel
 from typing_extensions import Annotated
 
@@ -28,12 +28,24 @@ class Label(SQLModel, table=True):
     )
 
 
+def is_valid_box_center_range(v: float) -> float:
+    if v < 0 or v > 1.0:
+        raise ValueError("Center must be between 0 and 1.0")
+    return v
+
+
+def is_valid_box_size_range(v: float) -> float:
+    if v <= 0 or v > 1.0:
+        raise ValueError("Dimension must be greater than 0 and less than or equal to 1.0")
+    return v
+
+
 class BoundingBox(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    center_x: float
-    center_y: float
-    width: float
-    height: float
+    center_x: Annotated[float, AfterValidator(is_valid_box_center_range)]
+    center_y: Annotated[float, AfterValidator(is_valid_box_center_range)]
+    width: Annotated[float, AfterValidator(is_valid_box_size_range)]
+    height: Annotated[float, AfterValidator(is_valid_box_size_range)]
     label_id: int = Field(foreign_key="label.id")
     annotator_name: str
     sample_id: int = Field(foreign_key="objectdetectionsample.id")
