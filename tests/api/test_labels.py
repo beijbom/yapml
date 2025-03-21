@@ -1,4 +1,5 @@
 import pytest
+from sqlmodel import select
 
 from yapml.datamodel import BoundingBox, Label
 
@@ -10,6 +11,15 @@ def test_label(test_session):
     test_session.add(label)
     test_session.commit()
     return label
+
+
+def test_get_label(client, test_label):
+    """Test getting a label"""
+    response = client.get(f"/api/v1/labels/{test_label.id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "test_label"
+    assert data["color"] == "#FF0000"
 
 
 def test_list_labels(client):
@@ -61,7 +71,8 @@ def test_create_label_json_invalid_color(client):
     label_data = {"name": "new_label", "color": "not a hex color string"}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 422  # Validation error
-    assert "Invalid hex color format. Must be #RRGGBB" in response.json()["detail"][0]["msg"]
+    print(response.json())
+    assert "Invalid hex color format. Must be #RRGGBB" in response.json()["detail"]
 
 
 def test_create_label_json_invalid_name(client):
@@ -69,7 +80,7 @@ def test_create_label_json_invalid_name(client):
     label_data = {"name": "invalid_name@!!", "color": "#00FF00"}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 422  # Validation error
-    assert "Name must contain only alphanumeric characters and underscores" in response.json()["detail"][0]["msg"]
+    assert "Name must contain only alphanumeric characters and underscores" in response.json()["detail"]
 
 
 def test_create_label_form(client):
@@ -109,6 +120,12 @@ def test_update_label(client, test_session):
     data = response.json()
     assert data["name"] == "updated_label"
     assert data["color"] == "#0000FF"
+
+    # Check that we didn't add a new label.
+    labels = test_session.exec(select(Label)).all()
+    assert len(labels) == 1
+    assert labels[0].name == "updated_label"
+    assert labels[0].color == "#0000FF"
 
 
 def test_update_label_not_found(client):
