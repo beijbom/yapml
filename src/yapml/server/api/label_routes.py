@@ -1,12 +1,9 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from pydantic import AfterValidator, BaseModel, ValidationError
-from sqlalchemy.exc import IntegrityError
+from pydantic import BaseModel, ValidationError
 from sqlmodel import select
 
-from yapml.datamodel import Label, is_valid_hex_color, is_valid_label_name
+from yapml.datamodel import Label
 from yapml.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])

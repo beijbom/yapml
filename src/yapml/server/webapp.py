@@ -1,12 +1,8 @@
 import os
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import SQLModel
 
-from yapml.db import engine
-from yapml.fixtures import populate_db
 from yapml.server.api import admin_router, boundingbox_router, label_router, sample_router
 from yapml.server.ui_routes import router as ui_router
 

@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import AfterValidator, confloat
+from pydantic import AfterValidator
 from sqlmodel import Field, Relationship, SQLModel
 from typing_extensions import Annotated
 

@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from yapml.client.styles import yapml_gray_color
 
 navbar = fh.Aside(

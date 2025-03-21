@@ -2,6 +2,7 @@ import modal
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel
+
 from yapml.db import engine
 from yapml.server.webapp import web_app
 
