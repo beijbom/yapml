@@ -5,39 +5,39 @@ from yapml.datamodel import BoundingBox, Label
 
 
 @pytest.fixture
-def test_label(test_session):
+def label_test_fixture(test_session):
     """Create a test label"""
-    label = Label(name="test_label", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000")
     test_session.add(label)
     test_session.commit()
     return label
 
 
-def test_get_label(client, test_label):
+def test_get_label(client, label_test_fixture):
     """Test getting a label"""
-    response = client.get(f"/api/v1/labels/{test_label.id}")
+    response = client.get(f"/api/v1/labels/{label_test_fixture.id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "test_label"
+    assert data["name"] == "label_test_fixture"
     assert data["color"] == "#FF0000"
 
 
 def test_list_labels(client):
     """Test listing all labels"""
 
-    label_data = {"name": "test_label1", "color": "#00FF00"}
+    label_data = {"name": "label_test_fixture1", "color": "#00FF00"}
     response = client.post("/api/v1/labels", json=label_data)
 
-    label_data = {"name": "test_label2", "color": "#00FF10"}
+    label_data = {"name": "label_test_fixture2", "color": "#00FF10"}
     response = client.post("/api/v1/labels", json=label_data)
 
     response = client.get("/api/v1/labels")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
-    assert data[0]["name"] == "test_label1"
+    assert data[0]["name"] == "label_test_fixture1"
     assert data[0]["color"] == "#00FF00"
-    assert data[1]["name"] == "test_label2"
+    assert data[1]["name"] == "label_test_fixture2"
     assert data[1]["color"] == "#00FF10"
 
 
@@ -58,7 +58,7 @@ def test_create_label_json(client):
 
 def test_create_label_duplicate_name(client):
     """Test creating a label with duplicate name"""
-    label_data = {"name": "test_label", "color": "#00FF00"}
+    label_data = {"name": "label_test_fixture", "color": "#00FF00"}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 200
     response = client.post("/api/v1/labels", json=label_data)
@@ -111,7 +111,7 @@ def test_create_label_form_invalid_name(client):
 
 def test_update_label(client, test_session):
     """Test updating a label"""
-    label = Label(name="test_label", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000")
     test_session.add(label)
     test_session.commit()
     update_data = {"name": "updated_label", "color": "#0000FF"}
@@ -151,7 +151,7 @@ def test_update_label_duplicate_name(client, test_session):
 
 
 def test_update_label_invalid_color(client, test_session):
-    label = Label(name="test_label", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000")
     test_session.add(label)
     test_session.commit()
 
@@ -162,7 +162,7 @@ def test_update_label_invalid_color(client, test_session):
 
 
 def test_update_label_invalid_name(client, test_session):
-    label = Label(name="test_label", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000")
     test_session.add(label)
     test_session.commit()
 
@@ -172,9 +172,9 @@ def test_update_label_invalid_name(client, test_session):
     assert "Name must contain only alphanumeric characters and underscores" in response.json()["detail"]
 
 
-def test_delete_label(client, test_label):
+def test_delete_label(client, label_test_fixture):
     """Test deleting a label"""
-    response = client.delete(f"/api/v1/labels/{test_label.id}")
+    response = client.delete(f"/api/v1/labels/{label_test_fixture.id}")
     assert response.status_code == 204
 
     # Verify label is deleted
@@ -186,7 +186,7 @@ def test_delete_label(client, test_label):
 
 def test_delete_label_in_use(client, test_session):
     """Test deleting a label that is in use"""
-    label = Label(name="test_label", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000")
     test_session.add(label)
     test_session.commit()
     box = BoundingBox(

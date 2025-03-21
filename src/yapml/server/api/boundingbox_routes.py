@@ -1,13 +1,28 @@
 # Define the update schema
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import AfterValidator, BaseModel, ValidationError
+from sqlmodel import select
 
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 from yapml.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
+
+
+@router.get("/boxes/{box_id}")
+async def get_box(request: Request, box_id: int) -> BoundingBox:
+    session = request.state.session
+    box = session.get(BoundingBox, box_id)
+    return box
+
+
+@router.get("/boxes")
+async def list_boxes(request: Request) -> list[BoundingBox]:
+    session = request.state.session
+    boxes = session.exec(select(BoundingBox)).all()
+    return boxes
 
 
 @router.post("/boxes", response_model=BoundingBox)
@@ -73,3 +88,14 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
     session.commit()
     session.refresh(new_box)
     return new_box
+
+
+@router.delete("/boxes/{box_id}")
+async def delete_box(request: Request, box_id: int):
+    session = request.state.session
+    box = session.get(BoundingBox, box_id)
+    if not box:
+        raise HTTPException(status_code=404, detail="Box not found")
+    session.delete(box)
+    session.commit()
+    return Response(status_code=204)
