@@ -107,10 +107,11 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'DELETE',
         })
         .then(response => {
-            if (!response.ok) {
+            if (response.status === 204) {
+                return null;
+            } else {
                 throw new Error('Network response was not ok');
             }
-            return response.json();
         })
         .then(data => {
             // Remove the label card from the UI

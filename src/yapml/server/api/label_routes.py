@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ValidationError
 from sqlmodel import select
 
-from yapml.datamodel import Label
+from yapml.datamodel import BoundingBox, Label
 from yapml.db import get_session
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
@@ -29,7 +31,7 @@ async def get_label(request: Request, label_id: int) -> Label:
 @router.get("/labels")
 async def list_labels(request: Request) -> list[Label]:
     session = request.state.session
-    query = select(Label)
+    query = select(Label).where(Label.deleted_at.is_(None))
     results = session.exec(query).all()
     return results
 
@@ -102,8 +104,14 @@ async def delete_label(request: Request, label_id: int) -> Response:
     if not label:
         raise HTTPException(status_code=404, detail="Label not found")
 
-    # Delete the label
-    session.delete(label)
+    # Check if the label is used by any boxes
+    boxes = session.exec(select(BoundingBox).where(BoundingBox.label_id == label_id)).all()
+    for box in boxes:
+        box.deleted_at = datetime.now()
+        session.add(box)
+
+    label.deleted_at = datetime.now()
+    session.add(label)
     session.commit()
 
     # Return empty response with 204 No Content status

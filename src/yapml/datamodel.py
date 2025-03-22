@@ -24,8 +24,12 @@ class Label(SQLModel, table=True):
     name: Annotated[str, AfterValidator(is_valid_label_name)] = Field(unique=True)
     color: Annotated[str, AfterValidator(is_valid_hex_color)] = Field(unique=True)
     boxes: list["BoundingBox"] = Relationship(
-        back_populates="label", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+        back_populates="label",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(Label.id == BoundingBox.label_id, BoundingBox.deleted_at.is_(None))",
+        },
     )
+    deleted_at: Optional[datetime] = Field(default=None)
 
 
 def is_valid_box_center_range(v: float) -> float:
@@ -53,6 +57,7 @@ class BoundingBox(SQLModel, table=True):
     previous_box_id: Optional[int] = Field(default=None, foreign_key="boundingbox.id", unique=True)
     sample: "ObjectDetectionSample" = Relationship(back_populates="boxes")
     label: Label = Relationship(back_populates="boxes")
+    deleted_at: Optional[datetime] = Field(default=None)
 
 
 def is_valid_height_width(v: int) -> int:
@@ -70,7 +75,12 @@ class ObjectDetectionSample(SQLModel, table=True):
     height: Optional[Annotated[int, AfterValidator(is_valid_height_width)]] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.now)
     deleted_at: Optional[datetime] = Field(default=None)
-    boxes: list[BoundingBox] = Relationship(back_populates="sample")
+    boxes: list[BoundingBox] = Relationship(
+        back_populates="sample",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(BoundingBox.sample_id == ObjectDetectionSample.id, BoundingBox.deleted_at.is_(None))",
+        },
+    )
 
 
 def suppress_stale_boxes(boxes: list[BoundingBox]) -> list[BoundingBox]:
