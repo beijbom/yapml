@@ -94,6 +94,7 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
 
 @router.delete("/boxes/{box_id}")
 async def delete_box(request: Request, box_id: int):
+    # TODO: Implement soft delete
     session = request.state.session
     box = session.get(BoundingBox, box_id)
     if not box:
