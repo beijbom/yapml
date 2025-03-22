@@ -1,4 +1,9 @@
+from base64 import b64encode
+from io import BytesIO
+
+import numpy as np
 import pytest
+from PIL import Image
 
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 

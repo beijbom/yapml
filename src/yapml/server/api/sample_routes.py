@@ -47,11 +47,20 @@ async def create_sample(request: Request, sample: ObjectDetectionSample) -> Obje
 
     # Step1: Fetch and decode the image.
     source_url = sample.url
+    try:
+        image_bytes = ImageDecoder().to_stream(source_url)
+        image = PILImage.open(image_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
-    image_bytes = ImageDecoder().to_stream(source_url)
-    image = PILImage.open(image_bytes)
-    if image.width != sample.width or image.height != sample.height:
-        raise HTTPException(status_code=422, detail="Image dimensions do not match sample dimensions")
+    if sample.width is None:
+        sample.width = image.width
+    elif image.width != sample.width:
+        raise HTTPException(status_code=422, detail="Given width does not match image width")
+    if sample.height is None:
+        sample.height = image.height
+    elif image.height != sample.height:
+        raise HTTPException(status_code=422, detail="Given height does not match image height")
 
     # Step2: Check if the image already exists in the database.
     image_hash = hashlib.md5(image.tobytes()).hexdigest()
