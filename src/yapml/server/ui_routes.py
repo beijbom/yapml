@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 import yapml.client as client
 from yapml.config import favicon_path
 from yapml.db import get_session
-from yapml.server.api import get_sample, list_labels, list_samples
+from yapml.server.api import get_sample, list_boxes, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 
@@ -34,14 +34,15 @@ async def labels_page(request: Request) -> HTMLResponse:
 @router.get("/samples/{image_id}")
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
-    page = client.render_sample_page(sample)
+    boxes = await list_boxes(request, sample_id=image_id, include_deleted=True)
+    page = client.render_sample_page(sample, list(boxes))
     return HTMLResponse(fh.to_xml(page))
 
 
 @router.get("/samples/{sample_id}/history")
 async def get_history(request: Request, sample_id: int) -> HTMLResponse:
-    sample = await get_sample(request, sample_id)
-    return HTMLResponse(fh.to_xml(client.render_sample_history(list(sample.boxes), sample_id)))
+    boxes = await list_boxes(request, sample_id=sample_id, include_deleted=True)
+    return HTMLResponse(fh.to_xml(client.render_sample_history(list(boxes), sample_id)))
 
 
 @router.get("/favicon.ico", include_in_schema=False)

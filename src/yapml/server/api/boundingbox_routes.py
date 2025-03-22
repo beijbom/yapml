@@ -1,4 +1,5 @@
 # Define the update schema
+from datetime import datetime
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -21,9 +22,15 @@ async def get_box(request: Request, box_id: int) -> BoundingBox:
 
 
 @router.get("/boxes")
-async def list_boxes(request: Request) -> list[BoundingBox]:
+async def list_boxes(
+    request: Request, include_deleted: bool = False, sample_id: Optional[int] = None
+) -> list[BoundingBox]:
     session = request.state.session
-    boxes = session.exec(select(BoundingBox)).all()
+    boxes = session.exec(
+        select(BoundingBox)
+        .where(BoundingBox.deleted_at.is_(None) if not include_deleted else True)
+        .where(BoundingBox.sample_id == sample_id if sample_id else True)
+    ).all()
     return boxes
 
 
@@ -86,19 +93,20 @@ def update_box(request: Request, box_id: int, update_data: BoxUpdate) -> Boundin
         BoundingBox.model_validate(new_box)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    session.add(new_box)
+    box.deleted_at = datetime.now()
+    session.add_all([new_box, box])
     session.commit()
     session.refresh(new_box)
     return new_box
 
 
 @router.delete("/boxes/{box_id}")
-async def delete_box(request: Request, box_id: int):
-    # TODO: Implement soft delete
+async def delete_box(request: Request, box_id: int) -> Response:
     session = request.state.session
     box = session.get(BoundingBox, box_id)
     if not box:
         raise HTTPException(status_code=404, detail="Box not found")
-    session.delete(box)
+    box.deleted_at = datetime.now()
+    session.add(box)
     session.commit()
     return Response(status_code=204)
