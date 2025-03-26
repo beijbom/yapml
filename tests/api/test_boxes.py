@@ -1,13 +1,9 @@
-from base64 import b64encode
 from datetime import datetime, timedelta
-from io import BytesIO
 
-import numpy as np
 import pytest
-from PIL import Image
 
-from yapml.client.samples_page import BoxChange, boxes_to_changes
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
+from yapml.utils import boxes_to_changes
 
 
 @pytest.fixture

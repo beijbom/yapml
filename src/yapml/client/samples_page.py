@@ -1,12 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import fasthtml.common as fh
-from pydantic import BaseModel
 
-from yapml.client.navbar import navbar
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
-from yapml.datamodel import BoundingBox, ObjectDetectionSample, suppress_stale_boxes
+from yapml.client.utils import time_delta_string
+from yapml.datamodel import BoundingBox, BoxChange, ObjectDetectionSample, suppress_stale_boxes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -586,119 +585,6 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
     )
 
 
-class BoxChange(BaseModel):
-    label_name: str
-    annotator_name: str
-    event: str
-    time_delta: str
-
-
-def time_delta_string(delta: timedelta) -> str:
-    """
-    Convert a timestamp to a human-readable relative time string.
-
-    Args:
-        timestamp: The datetime to convert
-
-    Returns:
-        A string like "just now", "5 seconds ago", "2 minutes ago", "3 hours ago", "2 days ago", etc.
-    """
-    # Convert to total seconds
-    seconds = int(delta.total_seconds())
-
-    # Define time intervals
-    minute = 60
-    hour = minute * 60
-    day = hour * 24
-    week = day * 7
-    month = day * 30
-    year = day * 365
-
-    if seconds < 10:
-        return "just now"
-    elif seconds < minute:
-        return f"{seconds} seconds ago"
-    elif seconds < 2 * minute:
-        return "a minute ago"
-    elif seconds < hour:
-        return f"{seconds // minute} minutes ago"
-    elif seconds < 2 * hour:
-        return "an hour ago"
-    elif seconds < day:
-        return f"{seconds // hour} hours ago"
-    elif seconds < 2 * day:
-        return "yesterday"
-    elif seconds < week:
-        return f"{seconds // day} days ago"
-    elif seconds < 2 * week:
-        return "a week ago"
-    elif seconds < month:
-        return f"{seconds // week} weeks ago"
-    elif seconds < 2 * month:
-        return "a month ago"
-    elif seconds < year:
-        return f"{seconds // month} months ago"
-    elif seconds < 2 * year:
-        return "a year ago"
-    else:
-        return f"{seconds // year} years ago"
-
-
-def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
-    if not boxes:
-        return []
-    box_by_id = {box.id: box for box in boxes}
-    box_ids_not_yet_seen = [box.id for box in boxes]
-
-    box = box_by_id[box_ids_not_yet_seen[-1]]
-    changes: list[BoxChange] = []
-    now = datetime.now()
-    while box_ids_not_yet_seen:
-        box_ids_not_yet_seen.remove(box.id)
-        if box.deleted_at:
-            changes.append(
-                BoxChange(
-                    label_name=box.label.name,
-                    annotator_name=box.annotator_name,
-                    event="deleted",
-                    time_delta=time_delta_string(now - box.deleted_at),
-                )
-            )
-        if not box.previous_box_id:
-            changes.append(
-                BoxChange(
-                    label_name=box.label.name,
-                    annotator_name=box.annotator_name,
-                    event="created",
-                    time_delta=time_delta_string(now - box.created_at),
-                )
-            )
-            if box_ids_not_yet_seen:
-                box = box_by_id[box_ids_not_yet_seen[-1]]
-        else:
-            previous_box = box_by_id[box.previous_box_id]
-            if previous_box.width != box.width or previous_box.height != box.height:
-                changes.append(
-                    BoxChange(
-                        label_name=box.label.name,
-                        annotator_name=box.annotator_name,
-                        event="resized",
-                        time_delta=time_delta_string(now - box.created_at),
-                    )
-                )
-            elif previous_box.center_x != box.center_x or previous_box.center_y != box.center_y:
-                changes.append(
-                    BoxChange(
-                        label_name=box.label.name,
-                        annotator_name=box.annotator_name,
-                        event="moved",
-                        time_delta=time_delta_string(now - box.created_at),
-                    )
-                )
-            box = previous_box
-    return changes
-
-
 def render_sample_history(boxes: list[BoundingBox], sample_id: int):
     changes = boxes_to_changes(boxes)
     return fh.Div(
@@ -743,7 +629,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
     return function_template(main, "Samples - Yet Another ML Platform", scripts=[DRAG_SCRIPT], styles=[DRAG_STYLE])
 
 
-def render_sample_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> fh.Html:
+def render_sample_details_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> fh.Html:
     history = render_sample_history(boxes, sample.id)
     card = render_image_card(sample)
     main = (

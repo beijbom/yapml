@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, BaseModel
 from sqlmodel import Field, Relationship, SQLModel
 from typing_extensions import Annotated
 
@@ -86,3 +86,10 @@ class ObjectDetectionSample(SQLModel, table=True):
 def suppress_stale_boxes(boxes: list[BoundingBox]) -> list[BoundingBox]:
     stale_box_ides = set([box.previous_box_id for box in boxes if box.previous_box_id is not None])
     return [box for box in boxes if box.id not in stale_box_ides]
+
+
+class BoxChange(BaseModel):
+    label_name: str
+    annotator_name: str
+    event: str
+    time_delta: str

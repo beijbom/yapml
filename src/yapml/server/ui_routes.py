@@ -35,7 +35,7 @@ async def labels_page(request: Request) -> HTMLResponse:
 async def sample_page(request: Request, image_id: int) -> HTMLResponse:
     sample = await get_sample(request, image_id)
     boxes = await list_boxes(request, sample_id=image_id, include_deleted=True)
-    page = client.render_sample_page(sample, list(boxes))
+    page = client.render_sample_details_page(sample, list(boxes))
     return HTMLResponse(fh.to_xml(page))
 
 
