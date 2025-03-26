@@ -1,6 +1,7 @@
 import fasthtml.common as fh
 
 from yapml.client.navbar import navbar
+from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
 
 # JavaScript for handling database reset
@@ -67,24 +68,4 @@ def render_admin_page() -> fh.Html:
             style="padding: 2rem;",
         ),
     )
-
-    body = (
-        fh.Div(
-            navbar,
-            main,
-            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
-        ),
-    )
-
-    page = fh.Html(
-        fh.Head(
-            fh.Title("Admin - Yet Another ML Platform"),
-            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
-            fh.Script(RESET_DB_SCRIPT),
-        ),
-        fh.Body(
-            body,
-        ),
-        data_theme="dark",
-    )
-    return page
+    return function_template(main, "Admin - Yet Another ML Platform", scripts=[RESET_DB_SCRIPT])

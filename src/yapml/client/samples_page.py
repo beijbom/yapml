@@ -4,6 +4,7 @@ import fasthtml.common as fh
 from pydantic import BaseModel
 
 from yapml.client.navbar import navbar
+from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
 from yapml.datamodel import BoundingBox, ObjectDetectionSample, suppress_stale_boxes
 
@@ -739,28 +740,7 @@ def render_sample_list_page(samples: list[ObjectDetectionSample]):
             style="padding: 2rem;",
         ),
     )
-
-    body = (
-        fh.Div(
-            navbar,
-            main,
-            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
-        ),
-    )
-
-    page = fh.Html(
-        fh.Head(
-            fh.Title("Samples - Yet Another ML Platform"),
-            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
-            fh.Style(DRAG_STYLE),
-            fh.Script(DRAG_SCRIPT),
-        ),
-        fh.Body(
-            body,
-        ),
-        data_theme="dark",
-    )
-    return page
+    return function_template(main, "Samples - Yet Another ML Platform", scripts=[DRAG_SCRIPT], styles=[DRAG_STYLE])
 
 
 def render_sample_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> fh.Html:
@@ -777,24 +757,4 @@ def render_sample_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) 
             style="padding: 2rem;",
         ),
     )
-    body = (
-        fh.Div(
-            navbar,
-            main,
-            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
-        ),
-    )
-    page = fh.Html(
-        fh.Head(
-            fh.Title("Labels - Yet Another ML Platform"),
-            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
-            fh.Style(DRAG_STYLE),
-            fh.Script(DRAG_SCRIPT),
-            fh.Script(src="https://unpkg.com/htmx.org@1.9.6"),
-        ),
-        fh.Body(
-            body,
-        ),
-        data_theme="dark",
-    )
-    return page
+    return function_template(main, "Sample details", scripts=[DRAG_SCRIPT], styles=[DRAG_STYLE])

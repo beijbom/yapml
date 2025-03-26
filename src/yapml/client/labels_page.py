@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-from yapml.client.navbar import navbar
+from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
 from yapml.datamodel import Label, suppress_stale_boxes
 
@@ -169,7 +169,7 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
             fh.Form(
                 fh.Grid(
                     fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
-                    fh.Input({"type": "color", "name": "color", "value": "#000000", "required": True}),
+                    fh.Input({"type": "color", "name": "color", "value": "#FFFF00", "required": True}),
                     fh.Button({"type": "submit"}, "Create Label"),
                 ),
                 action="/api/v1/labels-form",
@@ -218,24 +218,4 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
             style="padding: 2rem;",
         ),
     )
-
-    body = (
-        fh.Div(
-            navbar,
-            main,
-            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
-        ),
-    )
-
-    page = fh.Html(
-        fh.Head(
-            fh.Title("Labels - Yet Another ML Platform"),
-            fh.Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"),
-            fh.Script(COLOR_CHANGE_SCRIPT),
-        ),
-        fh.Body(
-            body,
-        ),
-        data_theme="dark",
-    )
-    return page
+    return function_template(main, "Labels - Yet Another ML Platform", [COLOR_CHANGE_SCRIPT])
