@@ -181,7 +181,7 @@ async function updateBoxPosition() {
                 center_y: centerY,
                 width: width,
                 height: height,
-                annotator_name: "Toby Change D",
+                annotator_name: "UI User",
             })
         });
         
@@ -422,7 +422,7 @@ async function stopDrawing(e) {
                 center_y: centerY,
                 width: normalizedWidth,
                 height: normalizedHeight,
-                annotator_name: "Toby Change D",
+                annotator_name: "UI User",
             };
             
             console.log('Sending payload:', payload);
