@@ -48,9 +48,6 @@ def test_create_label_json(client):
     assert response.status_code == 200
     data = response.json()
 
-    # Add debug print to see what we're getting
-    print(f"Response data: {data}")
-
     assert data["name"] == "new_label"
     assert data["color"] == "#00FF00"
     assert "id" in data  # Make sure we get an ID back
@@ -71,7 +68,6 @@ def test_create_label_json_invalid_color(client):
     label_data = {"name": "new_label", "color": "not a hex color string"}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 422  # Validation error
-    print(response.json())
     assert "Invalid hex color format. Must be #RRGGBB" in response.json()["detail"]
 
 

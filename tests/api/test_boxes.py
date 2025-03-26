@@ -139,7 +139,7 @@ class TestBoxesToChanges:
     def base_time(self):
         return datetime(2024, 1, 1, 12, 0, 0)
 
-    def test_single_box_creation(self, base_label, base_time):
+    def test_single_box_creation(self, base_label, base_time, test_session):
         """Test conversion of a single newly created box"""
         box = BoundingBox(
             id=1,
@@ -153,7 +153,9 @@ class TestBoxesToChanges:
             created_at=base_time,
             previous_box_id=None,
         )
-
+        test_session.add_all([box, base_label])
+        test_session.commit()
+        box = test_session.get(BoundingBox, box.id)
         changes = boxes_to_changes([box])
 
         assert len(changes) == 1
@@ -161,7 +163,7 @@ class TestBoxesToChanges:
         assert changes[0].annotator_name == "test_user"
         assert changes[0].event == "created"
 
-    def test_box_deletion(self, base_label, base_time):
+    def test_box_deletion(self, base_label, base_time, test_session):
         """Test conversion of a deleted box"""
         box = BoundingBox(
             id=1,
@@ -176,14 +178,16 @@ class TestBoxesToChanges:
             deleted_at=base_time + timedelta(minutes=5),
             previous_box_id=None,
         )
-
+        test_session.add_all([box, base_label])
+        test_session.commit()
+        box = test_session.get(BoundingBox, box.id)
         changes = boxes_to_changes([box])
 
         assert len(changes) == 2  # Should have creation and deletion events
         assert changes[0].event == "deleted"
         assert changes[1].event == "created"
 
-    def test_box_movement(self, base_label, base_time):
+    def test_box_movement(self, base_label, base_time, test_session):
         """Test conversion of a moved box"""
         original_box = BoundingBox(
             id=1,
@@ -210,14 +214,17 @@ class TestBoxesToChanges:
             created_at=base_time + timedelta(minutes=5),
             previous_box_id=1,
         )
-
+        test_session.add_all([original_box, moved_box, base_label])
+        test_session.commit()
+        original_box = test_session.get(BoundingBox, original_box.id)
+        moved_box = test_session.get(BoundingBox, moved_box.id)
         changes = boxes_to_changes([original_box, moved_box])
 
         assert len(changes) == 2
         assert changes[0].event == "moved"
         assert changes[1].event == "created"
 
-    def test_box_resize(self, base_label, base_time):
+    def test_box_resize(self, base_label, base_time, test_session):
         """Test conversion of a resized box"""
         original_box = BoundingBox(
             id=1,
@@ -244,14 +251,17 @@ class TestBoxesToChanges:
             created_at=base_time + timedelta(minutes=5),
             previous_box_id=1,
         )
-
+        test_session.add_all([original_box, resized_box, base_label])
+        test_session.commit()
+        original_box = test_session.get(BoundingBox, original_box.id)
+        resized_box = test_session.get(BoundingBox, resized_box.id)
         changes = boxes_to_changes([original_box, resized_box])
 
         assert len(changes) == 2
         assert changes[0].event == "resized"
         assert changes[1].event == "created"
 
-    def test_box_move_and_resize(self, base_label, base_time):
+    def test_box_move_and_resize(self, base_label, base_time, test_session):
         """Test conversion of a box that was both moved and resized"""
         original_box = BoundingBox(
             id=1,
@@ -278,7 +288,10 @@ class TestBoxesToChanges:
             created_at=base_time + timedelta(minutes=5),
             previous_box_id=1,
         )
-
+        test_session.add_all([original_box, modified_box, base_label])
+        test_session.commit()
+        original_box = test_session.get(BoundingBox, original_box.id)
+        modified_box = test_session.get(BoundingBox, modified_box.id)
         changes = boxes_to_changes([original_box, modified_box])
 
         assert len(changes) == 2
@@ -290,7 +303,7 @@ class TestBoxesToChanges:
         changes = boxes_to_changes([])
         assert len(changes) == 0
 
-    def test_multiple_modifications(self, base_label, base_time):
+    def test_multiple_modifications(self, base_label, base_time, test_session):
         """Test multiple modifications to the same box"""
         boxes = [
             BoundingBox(
@@ -330,7 +343,10 @@ class TestBoxesToChanges:
                 previous_box_id=2,
             ),
         ]
-
+        test_session.add_all(boxes)
+        test_session.add(base_label)
+        test_session.commit()
+        boxes = [test_session.get(BoundingBox, box.id) for box in boxes]
         changes = boxes_to_changes(boxes)
 
         assert len(changes) == 3
