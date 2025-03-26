@@ -6,7 +6,7 @@ from PIL import Image as PILImage
 from sqlmodel import Session, create_engine
 
 from yapml.config import image_dir, image_url_prefix, sqlite_url
-from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
+from yapml.datamodel import BoundingBox, FunctionType, Label, ObjectDetectionSample, YapFunction
 
 
 def populate_db() -> None:
@@ -22,14 +22,25 @@ def populate_db() -> None:
     engine = create_engine(sqlite_url)
 
     with Session(engine) as session:
+        function = YapFunction(
+            name="Test fixture", description="Object Detection", function_type=FunctionType.OBJECT_DETECTION
+        )
+        session.add(function)
+        session.commit()
+        assert function.id is not None
+
         # First transaction: Add images
-        sample1 = ObjectDetectionSample(key="test1.jpg", width=500, height=500, url=f"{image_url_prefix}/test1.jpg")
-        sample2 = ObjectDetectionSample(key="test2.jpg", width=500, height=500, url=f"{image_url_prefix}/test2.jpg")
+        sample1 = ObjectDetectionSample(
+            key="test1.jpg", width=500, height=500, url=f"{image_url_prefix}/test1.jpg", function_id=function.id
+        )
+        sample2 = ObjectDetectionSample(
+            key="test2.jpg", width=500, height=500, url=f"{image_url_prefix}/test2.jpg", function_id=function.id
+        )
         session.add_all([sample1, sample2])
         session.commit()
 
-        label1 = Label(name="dog", color="#00A020")
-        label2 = Label(name="cat", color="#FF0000")
+        label1 = Label(name="dog", color="#00A020", function_id=function.id)
+        label2 = Label(name="cat", color="#FF0000", function_id=function.id)
         session.add_all([label1, label2])
         session.commit()
 
@@ -46,6 +57,7 @@ def populate_db() -> None:
             label_id=label1.id,
             sample_id=sample1.id,
             annotator_name="alice",
+            function_id=function.id,
         )
         box2 = BoundingBox(
             center_x=0.5,
@@ -55,6 +67,7 @@ def populate_db() -> None:
             label_id=label2.id,
             sample_id=sample1.id,
             annotator_name="bob",
+            function_id=function.id,
         )
         box3 = BoundingBox(
             center_x=0.8,
@@ -64,6 +77,7 @@ def populate_db() -> None:
             label_id=label1.id,
             sample_id=sample2.id,
             annotator_name="alice",
+            function_id=function.id,
             created_at=datetime.now() - timedelta(days=10),
         )
 
@@ -78,6 +92,7 @@ def populate_db() -> None:
             sample_id=sample2.id,
             annotator_name="alice",
             previous_box_id=box3.id,
+            function_id=function.id,
         )
         session.add(box4)
         session.commit()
