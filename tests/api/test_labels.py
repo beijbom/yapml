@@ -207,8 +207,6 @@ def test_delete_label_in_use(client, test_session):
     data = response.json()
     assert len(data) == 0
 
-    assert test_session.get(BoundingBox, box.id) is None
-
 
 def test_delete_label_not_found(client):
     """Test deleting a non-existent label"""

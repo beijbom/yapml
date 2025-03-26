@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import fasthtml.common as fh
 from pydantic import BaseModel
@@ -526,7 +526,7 @@ def render_box(box, max_width, max_height):
                 top: {top}px;
                 width: {w}px;
                 height: {h}px;
-                border: 2px solid {box.label.color};
+                border: 3px solid {box.label.color};
                     background-color: {box.label.color}20;
                 box-sizing: border-box;
                 cursor: move;
@@ -592,7 +592,7 @@ class BoxChange(BaseModel):
     time_delta: str
 
 
-def time_delta_string(timestamp: datetime) -> str:
+def time_delta_string(delta: timedelta) -> str:
     """
     Convert a timestamp to a human-readable relative time string.
 
@@ -602,9 +602,6 @@ def time_delta_string(timestamp: datetime) -> str:
     Returns:
         A string like "just now", "5 seconds ago", "2 minutes ago", "3 hours ago", "2 days ago", etc.
     """
-    now = datetime.now()
-    delta = now - timestamp
-
     # Convert to total seconds
     seconds = int(delta.total_seconds())
 
@@ -647,28 +644,36 @@ def time_delta_string(timestamp: datetime) -> str:
 
 
 def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
-
+    if not boxes:
+        return []
     box_by_id = {box.id: box for box in boxes}
+    box_ids_not_yet_seen = [box.id for box in boxes]
+
+    box = box_by_id[box_ids_not_yet_seen[-1]]
     changes: list[BoxChange] = []
-    for box in boxes:
+    now = datetime.now()
+    while box_ids_not_yet_seen:
+        box_ids_not_yet_seen.remove(box.id)
+        if box.deleted_at:
+            changes.append(
+                BoxChange(
+                    label_name=box.label.name,
+                    annotator_name=box.annotator_name,
+                    event="deleted",
+                    time_delta=time_delta_string(now - box.deleted_at),
+                )
+            )
         if not box.previous_box_id:
             changes.append(
                 BoxChange(
                     label_name=box.label.name,
                     annotator_name=box.annotator_name,
                     event="created",
-                    time_delta=time_delta_string(box.created_at),
+                    time_delta=time_delta_string(now - box.created_at),
                 )
             )
-            if box.deleted_at:
-                changes.append(
-                    BoxChange(
-                        label_name=box.label.name,
-                        annotator_name=box.annotator_name,
-                        event="deleted",
-                        time_delta=time_delta_string(box.deleted_at),
-                    )
-                )
+            if box_ids_not_yet_seen:
+                box = box_by_id[box_ids_not_yet_seen[-1]]
         else:
             previous_box = box_by_id[box.previous_box_id]
             if previous_box.width != box.width or previous_box.height != box.height:
@@ -677,19 +682,19 @@ def boxes_to_changes(boxes: list[BoundingBox]) -> list[BoxChange]:
                         label_name=box.label.name,
                         annotator_name=box.annotator_name,
                         event="resized",
-                        time_delta=time_delta_string(box.created_at),
+                        time_delta=time_delta_string(now - box.created_at),
                     )
                 )
-            if previous_box.center_x != box.center_x or previous_box.center_y != box.center_y:
+            elif previous_box.center_x != box.center_x or previous_box.center_y != box.center_y:
                 changes.append(
                     BoxChange(
                         label_name=box.label.name,
                         annotator_name=box.annotator_name,
                         event="moved",
-                        time_delta=time_delta_string(box.created_at),
+                        time_delta=time_delta_string(now - box.created_at),
                     )
                 )
-
+            box = previous_box
     return changes
 
 
@@ -704,7 +709,7 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
                     fh.Small(change.time_delta, style=f"color: {yapml_gray_color};"),
                     style="padding: 3px 0; font-size: 0.9em;",
                 )
-                for change in changes[::-1]
+                for change in changes
             ],
         ),
         id="history-section",

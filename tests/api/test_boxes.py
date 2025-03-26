@@ -1,10 +1,12 @@
 from base64 import b64encode
+from datetime import datetime, timedelta
 from io import BytesIO
 
 import numpy as np
 import pytest
 from PIL import Image
 
+from yapml.client.samples_page import BoxChange, boxes_to_changes
 from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 
 
@@ -128,3 +130,201 @@ def test_box_too_small(client, test_session, box_fixture):
 def test_delete_box(client, box_fixture):
     response = client.delete(f"/api/v1/boxes/{box_fixture.id}")
     assert response.status_code == 204
+
+
+class TestBoxesToChanges:
+    @pytest.fixture
+    def base_label(self):
+        return Label(id=1, name="test_label", color="#FF0000")
+
+    @pytest.fixture
+    def base_time(self):
+        return datetime(2024, 1, 1, 12, 0, 0)
+
+    def test_single_box_creation(self, base_label, base_time):
+        """Test conversion of a single newly created box"""
+        box = BoundingBox(
+            id=1,
+            label=base_label,
+            center_x=0.5,
+            center_y=0.5,
+            width=0.1,
+            height=0.1,
+            annotator_name="test_user",
+            created_at=base_time,
+            previous_box_id=None,
+        )
+
+        changes = boxes_to_changes([box])
+
+        assert len(changes) == 1
+        assert changes[0].label_name == "test_label"
+        assert changes[0].annotator_name == "test_user"
+        assert changes[0].event == "created"
+
+    def test_box_deletion(self, base_label, base_time):
+        """Test conversion of a deleted box"""
+        box = BoundingBox(
+            id=1,
+            label=base_label,
+            center_x=0.5,
+            center_y=0.5,
+            width=0.1,
+            height=0.1,
+            annotator_name="test_user",
+            created_at=base_time,
+            deleted_at=base_time + timedelta(minutes=5),
+            previous_box_id=None,
+        )
+
+        changes = boxes_to_changes([box])
+
+        assert len(changes) == 2  # Should have creation and deletion events
+        assert changes[0].event == "deleted"
+        assert changes[1].event == "created"
+
+    def test_box_movement(self, base_label, base_time):
+        """Test conversion of a moved box"""
+        original_box = BoundingBox(
+            id=1,
+            label=base_label,
+            center_x=0.5,
+            center_y=0.5,
+            width=0.1,
+            height=0.1,
+            annotator_name="test_user",
+            created_at=base_time,
+            previous_box_id=None,
+        )
+
+        moved_box = BoundingBox(
+            id=2,
+            label=base_label,
+            center_x=0.6,  # Changed position
+            center_y=0.6,  # Changed position
+            width=0.1,  # Same size
+            height=0.1,  # Same size
+            annotator_name="test_user",
+            created_at=base_time + timedelta(minutes=5),
+            previous_box_id=1,
+        )
+
+        changes = boxes_to_changes([original_box, moved_box])
+
+        assert len(changes) == 2
+        assert changes[0].event == "moved"
+        assert changes[1].event == "created"
+
+    def test_box_resize(self, base_label, base_time):
+        """Test conversion of a resized box"""
+        original_box = BoundingBox(
+            id=1,
+            label=base_label,
+            center_x=0.5,
+            center_y=0.5,
+            width=0.1,
+            height=0.1,
+            annotator_name="test_user",
+            created_at=base_time,
+            previous_box_id=None,
+        )
+
+        resized_box = BoundingBox(
+            id=2,
+            label=base_label,
+            center_x=0.5,  # Same position
+            center_y=0.5,  # Same position
+            width=0.2,  # Changed size
+            height=0.2,  # Changed size
+            annotator_name="test_user",
+            created_at=base_time + timedelta(minutes=5),
+            previous_box_id=1,
+        )
+
+        changes = boxes_to_changes([original_box, resized_box])
+
+        assert len(changes) == 2
+        assert changes[0].event == "resized"
+        assert changes[1].event == "created"
+
+    def test_box_move_and_resize(self, base_label, base_time):
+        """Test conversion of a box that was both moved and resized"""
+        original_box = BoundingBox(
+            id=1,
+            label=base_label,
+            center_x=0.5,
+            center_y=0.5,
+            width=0.1,
+            height=0.1,
+            annotator_name="test_user",
+            created_at=base_time,
+            previous_box_id=None,
+        )
+
+        modified_box = BoundingBox(
+            id=2,
+            label=base_label,
+            center_x=0.6,  # Changed position
+            center_y=0.6,  # Changed position
+            width=0.2,  # Changed size
+            height=0.2,  # Changed size
+            annotator_name="test_user",
+            created_at=base_time + timedelta(minutes=5),
+            previous_box_id=1,
+        )
+
+        changes = boxes_to_changes([original_box, modified_box])
+
+        assert len(changes) == 2
+        assert changes[0].event == "resized"
+        assert changes[1].event == "created"
+
+    def test_empty_box_list(self):
+        """Test conversion of an empty box list"""
+        changes = boxes_to_changes([])
+        assert len(changes) == 0
+
+    def test_multiple_modifications(self, base_label, base_time):
+        """Test multiple modifications to the same box"""
+        boxes = [
+            BoundingBox(
+                id=1,
+                label=base_label,
+                center_x=0.5,
+                center_y=0.5,
+                width=0.1,
+                height=0.1,
+                annotator_name="test_user",
+                created_at=base_time,
+                previous_box_id=None,
+            ),
+            BoundingBox(
+                id=2,
+                label=base_label,
+                center_x=0.6,
+                center_y=0.6,
+                width=0.1,
+                height=0.1,
+                annotator_name="test_user",
+                created_at=base_time + timedelta(minutes=5),
+                previous_box_id=1,
+            ),
+            BoundingBox(
+                id=3,
+                label=base_label,
+                center_x=0.6,
+                center_y=0.6,
+                width=0.2,
+                height=0.2,
+                annotator_name="test_user",
+                created_at=base_time + timedelta(minutes=10),
+                previous_box_id=2,
+            ),
+        ]
+
+        changes = boxes_to_changes(boxes)
+
+        assert len(changes) == 3
+        assert changes[0].event == "resized"
+        assert changes[1].event == "moved"
+        assert changes[2].event == "created"
