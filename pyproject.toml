@@ -2,8 +2,10 @@
 line-length = 120
 lint.select = ["E", "F", "I"]
 
-[tool.black]
-line-length = 120
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+docstring-code-format = true
 
 [project]
 name = "yapml"
@@ -12,7 +14,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "black>=25.1.0",
     "fastapi[standard]>=0.115.8",
     "ipykernel>=6.29.5",
     "lancedb>=0.21.1",
