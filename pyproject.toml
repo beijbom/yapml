@@ -1,10 +1,14 @@
 [tool.ruff]
 line-length = 120
-lint.select = ["E", "F", "I"]
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [tool.ruff.format]
-quote-style = "single"
+quote-style = "double"
 indent-style = "space"
+skip-magic-trailing-comma = false
 docstring-code-format = true
 
 [project]
