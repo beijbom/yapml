@@ -1,17 +1,23 @@
+from typing import Optional
+
 import fasthtml.common as fh
+from fasthtml.common import FT
 
 from yapml.client.navbar import navbar
 
 
-def function_template(main: fh.Html, title: str, scripts: list[str] = None, styles: list[str] = None) -> fh.Html:
+def function_template(
+    main: FT,
+    title: str,
+    scripts: Optional[list[str]] = None,
+    styles: Optional[list[str]] = None,
+) -> FT:
     scripts = [] if not scripts else scripts
     styles = [] if not styles else styles
-    body = (
-        fh.Div(
-            navbar,
-            main,
-            style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
-        ),
+    body = fh.Div(
+        navbar,
+        main,
+        style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
     )
 
     page = fh.Html(

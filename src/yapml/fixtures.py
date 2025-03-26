@@ -10,7 +10,6 @@ from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
 
 
 def populate_db() -> None:
-
     # Get a random image from Lorem Picsum
     response = requests.get("https://picsum.photos/500/500")
     pil_image = PILImage.open(BytesIO(response.content))
@@ -35,6 +34,10 @@ def populate_db() -> None:
         session.commit()
 
         # Create and add boxes in the same session after images are committed
+        assert sample1.id is not None
+        assert sample2.id is not None
+        assert label1.id is not None
+        assert label2.id is not None
         box1 = BoundingBox(
             center_x=0.1,
             center_y=0.1,

@@ -11,7 +11,7 @@ def box_fixture(test_session):
     """Create a test image and box"""
     # Create test image
     sample = ObjectDetectionSample(
-        filename="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100
+        key="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100
     )
     test_session.add(sample)
     test_session.commit()
@@ -22,6 +22,8 @@ def box_fixture(test_session):
     test_session.commit()
 
     # Create test box
+    assert sample.id is not None
+    assert label.id is not None
     box = BoundingBox(
         sample_id=sample.id, center_x=0.1, center_y=0.1, width=0.1, height=0.1, label_id=label.id, annotator_name="test"
     )
@@ -141,7 +143,8 @@ class TestBoxesToChanges:
         """Test conversion of a single newly created box"""
         box = BoundingBox(
             id=1,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -162,7 +165,8 @@ class TestBoxesToChanges:
         """Test conversion of a deleted box"""
         box = BoundingBox(
             id=1,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -183,7 +187,8 @@ class TestBoxesToChanges:
         """Test conversion of a moved box"""
         original_box = BoundingBox(
             id=1,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -195,7 +200,8 @@ class TestBoxesToChanges:
 
         moved_box = BoundingBox(
             id=2,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.6,  # Changed position
             center_y=0.6,  # Changed position
             width=0.1,  # Same size
@@ -215,7 +221,8 @@ class TestBoxesToChanges:
         """Test conversion of a resized box"""
         original_box = BoundingBox(
             id=1,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -227,7 +234,8 @@ class TestBoxesToChanges:
 
         resized_box = BoundingBox(
             id=2,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,  # Same position
             center_y=0.5,  # Same position
             width=0.2,  # Changed size
@@ -247,7 +255,8 @@ class TestBoxesToChanges:
         """Test conversion of a box that was both moved and resized"""
         original_box = BoundingBox(
             id=1,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -259,7 +268,8 @@ class TestBoxesToChanges:
 
         modified_box = BoundingBox(
             id=2,
-            label=base_label,
+            label_id=base_label.id,
+            sample_id=1,
             center_x=0.6,  # Changed position
             center_y=0.6,  # Changed position
             width=0.2,  # Changed size
@@ -285,7 +295,8 @@ class TestBoxesToChanges:
         boxes = [
             BoundingBox(
                 id=1,
-                label=base_label,
+                label_id=base_label.id,
+                sample_id=1,
                 center_x=0.5,
                 center_y=0.5,
                 width=0.1,
@@ -296,7 +307,8 @@ class TestBoxesToChanges:
             ),
             BoundingBox(
                 id=2,
-                label=base_label,
+                label_id=base_label.id,
+                sample_id=1,
                 center_x=0.6,
                 center_y=0.6,
                 width=0.1,
@@ -307,7 +319,8 @@ class TestBoxesToChanges:
             ),
             BoundingBox(
                 id=3,
-                label=base_label,
+                label_id=base_label.id,
+                sample_id=1,
                 center_x=0.6,
                 center_y=0.6,
                 width=0.2,

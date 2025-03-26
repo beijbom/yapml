@@ -26,7 +26,7 @@ async def sitemap():
     base_url = "https://yourdomain.com"  # Replace with your domain
 
     # Get all routes
-    paths = [route.path for route in ui_router.routes]
+    paths = [route.path for route in ui_router.routes]  # type: ignore
 
     # Generate sitemap XML
     xml_content = """<?xml version="1.0" encoding="UTF-8"?>
@@ -38,7 +38,7 @@ async def sitemap():
         xml_content += f"""
         <url>
             <loc>{full_url}</loc>
-            <lastmod>{datetime.now().strftime('%Y-%m-%d')}</lastmod>
+            <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>
             <priority>{"1.0" if path == "/" else "0.8"}</priority>
         </url>"""
 

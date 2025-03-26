@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+from fasthtml.common import FT
 
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 """
 
 
-def render_admin_page() -> fh.Html:
+def render_admin_page() -> FT:
     """
     Render the admin page with database management controls.
 
@@ -46,25 +47,24 @@ def render_admin_page() -> fh.Html:
         An HTML page showing admin controls
     """
 
-    main = (
-        fh.Main(
-            fh.H1("Admin Panel"),
-            fh.Article(
-                fh.H4("Database Management"),
-                fh.P("Warning: Resetting the database will delete all data and restore initial fixtures."),
-                fh.Button(
-                    "Reset Database",
-                    id="reset-db-btn",
-                ),
-                fh.P(id="reset-feedback"),
-                style=f"""
+    main = fh.Main(
+        fh.H1("Admin Panel"),
+        fh.Article(
+            fh.H4("Database Management"),
+            fh.P("Warning: Resetting the database will delete all data and restore initial fixtures."),
+            fh.Button(
+                "Reset Database",
+                id="reset-db-btn",
+            ),
+            fh.P(id="reset-feedback"),
+            style=f"""
                     border-left: 5px solid {yapml_gray_color};
                     padding: 20px;
                     margin-bottom: 10px;
                     background-color: {yapml_gray_color}20;
                 """,
-            ),
-            style="padding: 2rem;",
         ),
+        style="padding: 2rem;",
     )
+
     return function_template(main, "Admin - Yet Another ML Platform", scripts=[RESET_DB_SCRIPT])

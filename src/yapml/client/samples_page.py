@@ -1,4 +1,5 @@
 import fasthtml.common as fh  # type: ignore
+from fasthtml.common import FT
 
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
@@ -497,7 +498,7 @@ DRAG_STYLE = """
 """
 
 
-def render_box(box, max_width, max_height):
+def render_box(box: BoundingBox, max_width: int, max_height: int) -> FT:
     # Calculate positions in pixels
     x = box.center_x * max_width
     y = box.center_y * max_height
@@ -571,19 +572,19 @@ def render_box(box, max_width, max_height):
     )
 
 
-def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_height: int = 500) -> fh.Div:
+def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_height: int = 500) -> FT:
     """
     Render an image with draggable and resizable bounding boxes.
     """
     return fh.Div(
+        {"data-sample-id": str(sample.id)},
         fh.Img(src=f"{sample.url}", style=f"width:{max_width}px; height:{max_height}px;"),
         *[render_box(box, max_width, max_height) for box in suppress_stale_boxes(sample.boxes)],
         style=f"position:relative; width:{max_width}px; height:{max_height}px;",
-        **{"data-sample-id": str(sample.id)},
     )
 
 
-def render_sample_history(boxes: list[BoundingBox], sample_id: int):
+def render_sample_history(boxes: list[BoundingBox], sample_id: int) -> FT:
     changes: list[BoxChange] = boxes_to_changes(boxes)
     return fh.Div(
         fh.Ul(
@@ -605,40 +606,37 @@ def render_sample_history(boxes: list[BoundingBox], sample_id: int):
 
 
 def render_sample_list_page(samples: list[ObjectDetectionSample]):
-    main = (
-        fh.Main(
-            fh.H1("Samples"),
-            fh.Grid(
-                *[
-                    fh.Div(
-                        render_image_card(sample),
-                        fh.A(
-                            "Details →",
-                            href=f"/samples/{sample.id}",
-                            style="display:block; text-align:left; margin-top:5px;",
-                        ),
-                    )
-                    for sample in samples
-                ],
-            ),
-            style="padding: 2rem;",
+    main = fh.Main(
+        fh.H1("Samples"),
+        fh.Grid(
+            *[
+                fh.Div(
+                    render_image_card(sample),
+                    fh.A(
+                        "Details →",
+                        href=f"/samples/{sample.id}",
+                        style="display:block; text-align:left; margin-top:5px;",
+                    ),
+                )
+                for sample in samples
+            ],
         ),
+        style="padding: 2rem;",
     )
     return function_template(main, "Samples - Yet Another ML Platform", scripts=[DRAG_SCRIPT], styles=[DRAG_STYLE])
 
 
-def render_sample_details_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> fh.Html:
+def render_sample_details_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> FT:
+    assert sample.id is not None
     history = render_sample_history(boxes, sample.id)
     card = render_image_card(sample)
-    main = (
-        fh.Main(
-            fh.H1("Sample image page"),
-            fh.Grid(
-                card,  # Remove outer div since sample ID is now in render_image_card
-                history,
-                style="grid-template-columns: 3fr 1fr",
-            ),
-            style="padding: 2rem;",
+    main = fh.Main(
+        fh.H1("Sample image page"),
+        fh.Grid(
+            card,  # Remove outer div since sample ID is now in render_image_card
+            history,
+            style="grid-template-columns: 3fr 1fr",
         ),
+        style="padding: 2rem;",
     )
     return function_template(main, "Sample details", scripts=[DRAG_SCRIPT], styles=[DRAG_STYLE])

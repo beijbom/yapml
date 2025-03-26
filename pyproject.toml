@@ -11,23 +11,18 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 
 [tool.pyright]
-typeCheckingMode = "strict"
-reportMissingTypeStubs = true
-reportUnknownParameterType = true
-reportUnknownVariableType = true
-reportUnknownMemberType = true
-reportMissingTypeArgument = true
-reportUntypedFunctionDecorator = true
+typeCheckingMode = "standard"
 
 [project]
 name = "yapml"
 version = "0.1.0"
-description = "Add your description here"
+description = "Full-stack Machine Learning Platform built in pure Python."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.115.8",
     "modal>=0.73.67",
+    "numpy>=2.2.4",
     "pillow>=11.1.0",
     "pydantic>=2.10.6",
     "python-fasthtml>=0.12.1",

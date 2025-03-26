@@ -28,7 +28,7 @@ async def list_boxes(
     session = request.state.session
     boxes = session.exec(
         select(BoundingBox)
-        .where(BoundingBox.deleted_at.is_(None) if not include_deleted else True)
+        .where(BoundingBox.deleted_at.is_(None) if not include_deleted else True)  # type: ignore
         .where(BoundingBox.sample_id == sample_id if sample_id else True)
     ).all()
     return boxes

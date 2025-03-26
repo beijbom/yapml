@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+from fasthtml.common import FT
 
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
 """
 
 
-def render_label_list_page(labels: list[Label]) -> fh.Html:
+def render_label_list_page(labels: list[Label]) -> FT:
     """
     Render a page that displays all labels with their colors.
 
@@ -163,59 +164,57 @@ def render_label_list_page(labels: list[Label]) -> fh.Html:
         An HTML page showing all labels
     """
 
-    main = (
-        fh.Main(
-            fh.H1("Labels"),
-            fh.Form(
-                fh.Grid(
-                    fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
-                    fh.Input({"type": "color", "name": "color", "value": "#FFFF00", "required": True}),
-                    fh.Button({"type": "submit"}, "Create Label"),
-                ),
-                action="/api/v1/labels-form",
-                method="post",
-                enctype="application/x-www-form-urlencoded",
-            ),
+    main = fh.Main(
+        fh.H1("Labels"),
+        fh.Form(
             fh.Grid(
-                *[
-                    fh.Article(
-                        fh.Div(
-                            fh.H4(
-                                label.name,
-                                cls="label-name",
-                                style="margin: 0; cursor: pointer;",
-                                title="Double-click to edit",
-                            ),
-                            fh.Input(
-                                type="color",
-                                cls="label-color-picker",
-                                value=label.color,
-                                data_label_id=f"{label.id}",
-                            ),
-                            fh.Small(
-                                f"{len(suppress_stale_boxes(label.boxes))} annotations",
-                                style=f"margin-left: auto; color: {yapml_gray_color};",
-                            ),
-                        ),
-                        fh.Button(
-                            "Delete",
-                            cls="delete-label-btn",
-                            data_label_id=f"{label.id}",
-                            title="Delete label",
-                        ),
-                        data_label_id=f"{label.id}",
-                        style=f"""
-                                        border-left: 5px solid {yapml_gray_color};
-                                        padding: 10px;
-                                        margin-bottom: 10px;
-                                        position: relative;
-                                        background-color: {yapml_gray_color}20;
-                                    """,
-                    )
-                    for label in labels
-                ],
+                fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
+                fh.Input({"type": "color", "name": "color", "value": "#FFFF00", "required": True}),
+                fh.Button({"type": "submit"}, "Create Label"),
             ),
-            style="padding: 2rem;",
+            action="/api/v1/labels-form",
+            method="post",
+            enctype="application/x-www-form-urlencoded",
         ),
+        fh.Grid(
+            *[
+                fh.Article(
+                    fh.Div(
+                        fh.H4(
+                            label.name,
+                            cls="label-name",
+                            style="margin: 0; cursor: pointer;",
+                            title="Double-click to edit",
+                        ),
+                        fh.Input(
+                            type="color",
+                            cls="label-color-picker",
+                            value=label.color,
+                            data_label_id=f"{label.id}",
+                        ),
+                        fh.Small(
+                            f"{len(suppress_stale_boxes(label.boxes))} annotations",
+                            style=f"margin-left: auto; color: {yapml_gray_color};",
+                        ),
+                    ),
+                    fh.Button(
+                        "Delete",
+                        cls="delete-label-btn",
+                        data_label_id=f"{label.id}",
+                        title="Delete label",
+                    ),
+                    data_label_id=f"{label.id}",
+                    style=f"""
+                              border-left: 5px solid {yapml_gray_color};
+                              padding: 10px;
+                              margin-bottom: 10px;
+                              position: relative;
+                              background-color: {yapml_gray_color}20;
+                            """,
+                )
+                for label in labels
+            ],
+        ),
+        style="padding: 2rem;",
     )
     return function_template(main, "Labels - Yet Another ML Platform", [COLOR_CHANGE_SCRIPT])

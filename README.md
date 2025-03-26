@@ -19,6 +19,8 @@ An open-source full-stack Machine Learning Platform build on Modal.
 
 `uv run modal deploy -m src.yapml.yapml`
 
-### Run tests
+### Test, linting and formatting
 
-`uv run pytest`
+* `uv run pytest`
+* `uv run pyright`
+* `uv run ruff check`

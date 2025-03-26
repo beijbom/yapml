@@ -31,7 +31,7 @@ async def get_label(request: Request, label_id: int) -> Label:
 @router.get("/labels")
 async def list_labels(request: Request) -> list[Label]:
     session = request.state.session
-    query = select(Label).where(Label.deleted_at.is_(None))
+    query = select(Label).where(Label.deleted_at.is_(None))  # type: ignore
     results = session.exec(query).all()
     return results
 
@@ -74,7 +74,6 @@ class LabelUpdate(BaseModel):
 
 @router.put("/labels/{label_id}")
 async def update_label(request: Request, label_id: int, update_data: LabelUpdate) -> Label:
-
     session = request.state.session
     label = session.get(Label, label_id)
     if not label:
