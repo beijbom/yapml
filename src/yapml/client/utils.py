@@ -2,15 +2,6 @@ from datetime import timedelta
 
 
 def time_delta_string(delta: timedelta) -> str:
-    """
-    Convert a timestamp to a human-readable relative time string.
-
-    Args:
-        timestamp: The datetime to convert
-
-    Returns:
-        A string like "just now", "5 seconds ago", "2 minutes ago", "3 hours ago", "2 days ago", etc.
-    """
     # Convert to total seconds
     seconds = int(delta.total_seconds())
 

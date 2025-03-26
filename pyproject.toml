@@ -10,6 +10,14 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 
+[tool.pyright]
+typeCheckingMode = "strict"
+reportMissingTypeStubs = true
+reportUnknownParameterType = true
+reportUnknownVariableType = true
+reportUnknownMemberType = true
+reportMissingTypeArgument = true
+reportUntypedFunctionDecorator = true
 
 [project]
 name = "yapml"
@@ -28,4 +36,4 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ipykernel>=6.29.5", "pytest>=8.3.5", "ruff>=0.11.2"]
+dev = ["ipykernel>=6.29.5", "pyright>=1.1.398", "pytest>=8.3.5", "ruff>=0.11.2"]
