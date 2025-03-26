@@ -1,11 +1,9 @@
-from datetime import datetime
-
-import fasthtml.common as fh
+import fasthtml.common as fh  # type: ignore
 
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
-from yapml.client.utils import time_delta_string
 from yapml.datamodel import BoundingBox, BoxChange, ObjectDetectionSample, suppress_stale_boxes
+from yapml.utils import boxes_to_changes
 
 # Add JavaScript for drag and resize functionality
 DRAG_SCRIPT = """
@@ -586,7 +584,7 @@ def render_image_card(sample: ObjectDetectionSample, max_width: int = 500, max_h
 
 
 def render_sample_history(boxes: list[BoundingBox], sample_id: int):
-    changes = boxes_to_changes(boxes)
+    changes: list[BoxChange] = boxes_to_changes(boxes)
     return fh.Div(
         fh.Ul(
             *[

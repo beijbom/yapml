@@ -1,6 +1,5 @@
 import fasthtml.common as fh
 
-from yapml.client.navbar import navbar
 from yapml.client.page_templates import function_template
 from yapml.client.styles import yapml_gray_color
 

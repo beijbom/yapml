@@ -1,10 +1,9 @@
 import base64
 import os
 from io import BytesIO
-from typing import Tuple, Union
 
-import requests
-from PIL import Image
+import requests  # type: ignore
+from PIL import Image  # type: ignore
 
 
 class ImageDecoder:
@@ -64,7 +63,7 @@ class ImageDecoder:
 
 
 class ImageEncoder:
-    def to_base64(self, img: Union[Image.Image, BytesIO]) -> str:
+    def to_base64(self, img: Image.Image | BytesIO) -> str:
         if isinstance(img, Image.Image):
             im_bytes = BytesIO()
             if img.mode == "P" and "transparency" in img.info:
