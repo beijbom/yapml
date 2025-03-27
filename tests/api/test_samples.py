@@ -5,13 +5,24 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from yapml.datamodel import ObjectDetectionSample
+from yapml.datamodel import FunctionType, ObjectDetectionSample, YapFunction
 
 
 @pytest.fixture
-def sample_fixture(test_session):
+def function_fixture(test_session):
+    """Create a test function"""
+    function = YapFunction(name="test", description="test", function_type=FunctionType.OBJECT_DETECTION)
+    test_session.add(function)
+    test_session.commit()
+    return function
+
+
+@pytest.fixture
+def sample_fixture(test_session, function_fixture):
     """Create a test sample"""
-    sample = ObjectDetectionSample(key="test.jpg", url="https://picsum.photos/100", width=100, height=100)
+    sample = ObjectDetectionSample(
+        key="test.jpg", url="https://picsum.photos/100", width=100, height=100, function_id=function_fixture.id
+    )
     test_session.add(sample)
     test_session.commit()
     return sample
@@ -61,9 +72,14 @@ class TestSamplePost:
 
         return img_byte_arr, data_uri
 
-    def test_create_sample_with_url(self, client):
+    def test_create_sample_with_url(self, client, function_fixture):
         """Test creating a sample using a URL"""
-        sample_data = {"url": "https://picsum.photos/100.jpg", "width": 100, "height": 100}
+        sample_data = {
+            "url": "https://picsum.photos/100.jpg",
+            "width": 100,
+            "height": 100,
+            "function_id": function_fixture.id,
+        }
         response = client.post("/api/v1/samples", json=sample_data)
         assert response.status_code == 200
         data = response.json()
@@ -72,12 +88,12 @@ class TestSamplePost:
         assert "image_hash" in data
         assert data["image_hash"] is not None
 
-    def test_create_sample_with_data_uri(self, client):
+    def test_create_sample_with_data_uri(self, client, function_fixture):
         """Test creating a sample using a data URI"""
         width, height = 100, 100
         _, data_uri = self.create_test_image(width, height)
 
-        sample_data = {"url": data_uri, "width": width, "height": height}
+        sample_data = {"url": data_uri, "width": width, "height": height, "function_id": function_fixture.id}
         response = client.post("/api/v1/samples", json=sample_data)
         assert response.status_code == 200
         data = response.json()
@@ -86,12 +102,12 @@ class TestSamplePost:
         assert "image_hash" in data
         assert data["image_hash"] is not None
 
-    def test_create_sample_invalid_width(self, client):
+    def test_create_sample_invalid_width(self, client, function_fixture):
         """Test creating a sample with invalid width"""
         width, height = 100, 100
         _, data_uri = self.create_test_image(width, height)
 
-        sample_data = {"url": data_uri, "width": 200, "height": 100}  # Wrong dimensions
+        sample_data = {"url": data_uri, "width": 200, "height": 100, "function_id": function_fixture.id}
         response = client.post("/api/v1/samples", json=sample_data)
         assert response.status_code == 422
         assert "width" in response.json()["detail"]
@@ -106,12 +122,12 @@ class TestSamplePost:
         assert response.status_code == 422
         assert "height" in response.json()["detail"]
 
-    def test_create_sample_duplicate_image(self, client):
+    def test_create_sample_duplicate_image(self, client, function_fixture):
         """Test creating a sample with a duplicate image"""
         width, height = 100, 100
         _, data_uri = self.create_test_image(width, height)
 
-        sample_data = {"url": data_uri, "width": width, "height": height}
+        sample_data = {"url": data_uri, "width": width, "height": height, "function_id": function_fixture.id}
         # First creation should succeed
         response = client.post("/api/v1/samples", json=sample_data)
         assert response.status_code == 200
@@ -135,9 +151,9 @@ class TestSamplePost:
         assert response.status_code == 422
         assert "width" in response.json()["detail"]
 
-    def test_create_sample_only_url(self, client):
+    def test_create_sample_only_url(self, client, function_fixture):
         """Test creating a sample with missing required fields"""
-        sample_data = {"url": "https://picsum.photos/100.jpg"}
+        sample_data = {"url": f"https://picsum.photos/100.jpg", "function_id": function_fixture.id}
         response = client.post("/api/v1/samples", json=sample_data)
         assert response.status_code == 200
 
