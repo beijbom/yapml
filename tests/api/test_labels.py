@@ -7,7 +7,7 @@ from yapml.datamodel import BoundingBox, Label
 @pytest.fixture
 def label_test_fixture(test_session):
     """Create a test label"""
-    label = Label(name="label_test_fixture", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000", function_id=1)
     test_session.add(label)
     test_session.commit()
     return label
@@ -25,10 +25,10 @@ def test_get_label(client, label_test_fixture):
 def test_list_labels(client):
     """Test listing all labels"""
 
-    label_data = {"name": "label_test_fixture1", "color": "#00FF00"}
+    label_data = {"name": "label_test_fixture1", "color": "#00FF00", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
 
-    label_data = {"name": "label_test_fixture2", "color": "#00FF10"}
+    label_data = {"name": "label_test_fixture2", "color": "#00FF10", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
 
     response = client.get("/api/v1/labels")
@@ -43,7 +43,7 @@ def test_list_labels(client):
 
 def test_create_label_json(client):
     """Test creating a label via JSON"""
-    label_data = {"name": "new_label", "color": "#00FF00"}
+    label_data = {"name": "new_label", "color": "#00FF00", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 200
     data = response.json()
@@ -55,7 +55,7 @@ def test_create_label_json(client):
 
 def test_create_label_duplicate_name(client):
     """Test creating a label with duplicate name"""
-    label_data = {"name": "label_test_fixture", "color": "#00FF00"}
+    label_data = {"name": "label_test_fixture", "color": "#00FF00", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 200
     response = client.post("/api/v1/labels", json=label_data)
@@ -65,7 +65,7 @@ def test_create_label_duplicate_name(client):
 
 def test_create_label_json_invalid_color(client):
     """Test creating a label via JSON with invalid color"""
-    label_data = {"name": "new_label", "color": "not a hex color string"}
+    label_data = {"name": "new_label", "color": "not a hex color string", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 422  # Validation error
     assert "Invalid hex color format. Must be #RRGGBB" in response.json()["detail"]
@@ -73,7 +73,7 @@ def test_create_label_json_invalid_color(client):
 
 def test_create_label_json_invalid_name(client):
     """Test creating a label with invalid name"""
-    label_data = {"name": "invalid_name@!!", "color": "#00FF00"}
+    label_data = {"name": "invalid_name@!!", "color": "#00FF00", "function_id": 1}
     response = client.post("/api/v1/labels", json=label_data)
     assert response.status_code == 422  # Validation error
     assert "Name must contain only alphanumeric characters and underscores" in response.json()["detail"]
@@ -81,7 +81,7 @@ def test_create_label_json_invalid_name(client):
 
 def test_create_label_form(client):
     """Test creating a label via form submission"""
-    form_data = {"name": "form_label", "color": "#0000FF"}
+    form_data = {"name": "form_label", "color": "#0000FF", "function_id": 1}
     response = client.post("/api/v1/labels-form", data=form_data)
 
     # Redirect. FIXME: It should return a 303 here. I'm not sure why I'm getting a 200.
@@ -91,7 +91,7 @@ def test_create_label_form(client):
 
 def test_create_label_form_invalid_color(client):
     """Test creating a label via form submission with invalid color"""
-    form_data = {"name": "form_label", "color": "invalid"}
+    form_data = {"name": "form_label", "color": "invalid", "function_id": 1}
     response = client.post("/api/v1/labels-form", data=form_data)
     assert response.status_code == 422  # Validation error
     assert "Invalid hex color format. Must be #RRGGBB" in response.json()["detail"]
@@ -99,7 +99,7 @@ def test_create_label_form_invalid_color(client):
 
 def test_create_label_form_invalid_name(client):
     """Test creating a label via form submission with invalid name"""
-    form_data = {"name": "invalid_name@!!", "color": "#00FF00"}
+    form_data = {"name": "invalid_name@!!", "color": "#00FF00", "function_id": 1}
     response = client.post("/api/v1/labels-form", data=form_data)
     assert response.status_code == 422  # Validation error
     assert "Name must contain only alphanumeric characters and underscores" in response.json()["detail"]
@@ -107,7 +107,7 @@ def test_create_label_form_invalid_name(client):
 
 def test_update_label(client, test_session):
     """Test updating a label"""
-    label = Label(name="label_test_fixture", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000", function_id=1)
     test_session.add(label)
     test_session.commit()
     update_data = {"name": "updated_label", "color": "#0000FF"}
@@ -134,8 +134,8 @@ def test_update_label_not_found(client):
 def test_update_label_duplicate_name(client, test_session):
     """Test updating a label to a duplicate name"""
     # Create two labels
-    label1 = Label(name="label1", color="#FF0000")
-    label2 = Label(name="label2", color="#00FF00")
+    label1 = Label(name="label1", color="#FF0000", function_id=1)
+    label2 = Label(name="label2", color="#00FF00", function_id=1)
     test_session.add_all([label1, label2])
     test_session.commit()
 
@@ -147,7 +147,7 @@ def test_update_label_duplicate_name(client, test_session):
 
 
 def test_update_label_invalid_color(client, test_session):
-    label = Label(name="label_test_fixture", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000", function_id=1)
     test_session.add(label)
     test_session.commit()
 
@@ -158,7 +158,7 @@ def test_update_label_invalid_color(client, test_session):
 
 
 def test_update_label_invalid_name(client, test_session):
-    label = Label(name="label_test_fixture", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000", function_id=1)
     test_session.add(label)
     test_session.commit()
 
@@ -182,12 +182,13 @@ def test_delete_label(client, label_test_fixture):
 
 def test_delete_label_in_use(client, test_session):
     """Test deleting a label that is in use"""
-    label = Label(name="label_test_fixture", color="#FF0000")
+    label = Label(name="label_test_fixture", color="#FF0000", function_id=1)
     test_session.add(label)
     test_session.commit()
     box = BoundingBox(
         label_id=label.id,
         sample_id=1,
+        function_id=1,
         center_x=0.5,
         center_y=0.5,
         width=0.1,

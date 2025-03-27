@@ -2,22 +2,30 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from yapml.datamodel import BoundingBox, Label, ObjectDetectionSample
+from yapml.datamodel import BoundingBox, FunctionType, Label, ObjectDetectionSample, YapFunction
 from yapml.utils import boxes_to_changes
 
 
 @pytest.fixture
 def box_fixture(test_session):
     """Create a test image and box"""
+    # Create test function
+    function = YapFunction(
+        name="test_function", description="Test function", function_type=FunctionType.OBJECT_DETECTION
+    )
+    test_session.add(function)
+    test_session.commit()
+
     # Create test image
     sample = ObjectDetectionSample(
-        key="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100
+        key="test.jpg", url="https://this/url/does/not/exist/test.jpg", width=100, height=100, function_id=function.id
     )
     test_session.add(sample)
     test_session.commit()
 
     # Create test label
-    label = Label(name="cat", color="#FF0000")
+    assert function.id is not None
+    label = Label(name="cat", color="#FF0000", function_id=function.id)
     test_session.add(label)
     test_session.commit()
 
@@ -25,7 +33,14 @@ def box_fixture(test_session):
     assert sample.id is not None
     assert label.id is not None
     box = BoundingBox(
-        sample_id=sample.id, center_x=0.1, center_y=0.1, width=0.1, height=0.1, label_id=label.id, annotator_name="test"
+        sample_id=sample.id,
+        function_id=function.id,
+        center_x=0.1,
+        center_y=0.1,
+        width=0.1,
+        height=0.1,
+        label_id=label.id,
+        annotator_name="test",
     )
     test_session.add(box)
     test_session.commit()
@@ -86,6 +101,7 @@ def test_update_box_too_large(client, box_fixture):
 def test_create_box(client, test_session, box_fixture):
     body = {
         "sample_id": 1,
+        "function_id": 1,
         "label_id": 1,
         "center_x": 0.1,
         "center_y": 0.1,
@@ -100,6 +116,7 @@ def test_create_box(client, test_session, box_fixture):
 def test_create_box_too_large(client, test_session, box_fixture):
     body = {
         "sample_id": 1,
+        "function_id": 1,
         "label_id": 1,
         "center_x": 1.1,
         "center_y": 0.1,
@@ -114,6 +131,7 @@ def test_create_box_too_large(client, test_session, box_fixture):
 def test_box_too_small(client, test_session, box_fixture):
     body = {
         "sample_id": 1,
+        "function_id": 1,
         "label_id": 1,
         "center_x": 0.0,
         "center_y": 0.0,
@@ -133,7 +151,7 @@ def test_delete_box(client, box_fixture):
 class TestBoxesToChanges:
     @pytest.fixture
     def base_label(self):
-        return Label(id=1, name="test_label", color="#FF0000")
+        return Label(id=1, name="test_label", color="#FF0000", function_id=1)
 
     @pytest.fixture
     def base_time(self):
@@ -145,6 +163,7 @@ class TestBoxesToChanges:
             id=1,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -169,6 +188,7 @@ class TestBoxesToChanges:
             id=1,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -193,6 +213,7 @@ class TestBoxesToChanges:
             id=1,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -206,6 +227,7 @@ class TestBoxesToChanges:
             id=2,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.6,  # Changed position
             center_y=0.6,  # Changed position
             width=0.1,  # Same size
@@ -230,6 +252,7 @@ class TestBoxesToChanges:
             id=1,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -243,6 +266,7 @@ class TestBoxesToChanges:
             id=2,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,  # Same position
             center_y=0.5,  # Same position
             width=0.2,  # Changed size
@@ -267,6 +291,7 @@ class TestBoxesToChanges:
             id=1,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.5,
             center_y=0.5,
             width=0.1,
@@ -280,6 +305,7 @@ class TestBoxesToChanges:
             id=2,
             label_id=base_label.id,
             sample_id=1,
+            function_id=1,
             center_x=0.6,  # Changed position
             center_y=0.6,  # Changed position
             width=0.2,  # Changed size
@@ -310,6 +336,7 @@ class TestBoxesToChanges:
                 id=1,
                 label_id=base_label.id,
                 sample_id=1,
+                function_id=1,
                 center_x=0.5,
                 center_y=0.5,
                 width=0.1,
@@ -322,6 +349,7 @@ class TestBoxesToChanges:
                 id=2,
                 label_id=base_label.id,
                 sample_id=1,
+                function_id=1,
                 center_x=0.6,
                 center_y=0.6,
                 width=0.1,
@@ -334,6 +362,7 @@ class TestBoxesToChanges:
                 id=3,
                 label_id=base_label.id,
                 sample_id=1,
+                function_id=1,
                 center_x=0.6,
                 center_y=0.6,
                 width=0.2,
