@@ -29,9 +29,11 @@ async def get_label(request: Request, label_id: int) -> Label:
 
 
 @router.get("/labels")
-async def list_labels(request: Request) -> list[Label]:
+async def list_labels(request: Request, function_id: int | None = None) -> list[Label]:
     session = request.state.session
     query = select(Label).where(Label.deleted_at.is_(None))  # type: ignore
+    if function_id is not None:
+        query = query.where(Label.function_id == function_id)
     results = session.exec(query).all()
     return results
 

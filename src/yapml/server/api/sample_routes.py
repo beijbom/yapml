@@ -31,10 +31,12 @@ async def get_sample(request: Request, sample_id: int) -> ObjectDetectionSample:
 
 
 @router.get("/samples")
-async def list_samples(request: Request) -> list[ObjectDetectionSample]:
+async def list_samples(request: Request, function_id: int | None = None) -> list[ObjectDetectionSample]:
     session = request.state.session
 
     query = select(ObjectDetectionSample)
+    if function_id is not None:
+        query = query.where(ObjectDetectionSample.function_id == function_id)
     results = session.exec(query).all()
     for sample in results:
         _ = sample.boxes

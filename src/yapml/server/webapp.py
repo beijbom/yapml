@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-from yapml.server.api import admin_router, boundingbox_router, label_router, sample_router
+from yapml.server.api import admin_router, boundingbox_router, function_router, label_router, sample_router
 from yapml.server.ui_routes import router as ui_router
 
 web_app = FastAPI()
@@ -17,6 +17,7 @@ web_app.include_router(admin_router)
 web_app.include_router(boundingbox_router)
 web_app.include_router(label_router)
 web_app.include_router(sample_router)
+web_app.include_router(function_router)
 web_app.include_router(ui_router)
 
 

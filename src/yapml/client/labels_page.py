@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
 """
 
 
-def render_label_list_page(labels: list[Label]) -> FT:
+def render_label_list_page(function_id: int, labels: list[Label]) -> FT:
     """
     Render a page that displays all labels with their colors.
 
@@ -217,4 +217,4 @@ def render_label_list_page(labels: list[Label]) -> FT:
         ),
         style="padding: 2rem;",
     )
-    return function_template(main, "Labels - Yet Another ML Platform", [COLOR_CHANGE_SCRIPT])
+    return function_template(main, function_id, "Labels - Yet Another ML Platform", [COLOR_CHANGE_SCRIPT])
