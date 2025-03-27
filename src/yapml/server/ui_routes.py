@@ -5,36 +5,43 @@ from fastapi.responses import FileResponse, HTMLResponse
 import yapml.client as client
 from yapml.config import favicon_path
 from yapml.db import get_session
-from yapml.server.api import get_sample, list_boxes, list_labels, list_samples
+from yapml.server.api import get_sample, list_boxes, list_functions, list_labels, list_samples
 
 router = APIRouter(prefix="", dependencies=[Depends(get_session)])
 
 
 @router.get("/")
 async def homepage(request: Request) -> HTMLResponse:
-    samples = await list_samples(request)
-    page = client.render_sample_list_page(samples)
+    functions = await list_functions(request)
+    page = client.render_function_list_page(functions)
     return HTMLResponse(fh.to_xml(page))
 
 
-@router.get("/samples")
-async def samples_list_page(request: Request) -> HTMLResponse:
-    samples = await list_samples(request)
-    page = client.render_sample_list_page(samples)
+@router.get("/functions")
+async def functions_page(request: Request) -> HTMLResponse:
+    functions = await list_functions(request)
+    page = client.render_function_list_page(functions)
     return HTMLResponse(fh.to_xml(page))
 
 
-@router.get("/labels")
-async def labels_page(request: Request) -> HTMLResponse:
-    labels = await list_labels(request)
-    page = client.render_label_list_page(labels)
+@router.get("/functions/{function_id}/samples")
+async def samples_list_page(request: Request, function_id: int) -> HTMLResponse:
+    samples = await list_samples(request, function_id=function_id)
+    page = client.render_sample_list_page(function_id, samples)
     return HTMLResponse(fh.to_xml(page))
 
 
-@router.get("/samples/{image_id}")
-async def sample_page(request: Request, image_id: int) -> HTMLResponse:
-    sample = await get_sample(request, image_id)
-    boxes = await list_boxes(request, sample_id=image_id, include_deleted=True)
+@router.get("/functions/{function_id}/labels")
+async def labels_page(request: Request, function_id: int) -> HTMLResponse:
+    labels = await list_labels(request, function_id=function_id)
+    page = client.render_label_list_page(function_id, labels)
+    return HTMLResponse(fh.to_xml(page))
+
+
+@router.get("/samples/{sample_id}")
+async def sample_page(request: Request, sample_id: int) -> HTMLResponse:
+    sample = await get_sample(request, sample_id)
+    boxes = await list_boxes(request, sample_id=sample_id, include_deleted=True)
     page = client.render_sample_details_page(sample, list(boxes))
     return HTMLResponse(fh.to_xml(page))
 

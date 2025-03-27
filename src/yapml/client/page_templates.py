@@ -3,11 +3,12 @@ from typing import Optional
 import fasthtml.common as fh
 from fasthtml.common import FT
 
-from yapml.client.navbar import navbar
+from yapml.client.navbar import render_navbar
 
 
 def function_template(
     main: FT,
+    function_id: int,
     title: str,
     scripts: Optional[list[str]] = None,
     styles: Optional[list[str]] = None,
@@ -15,7 +16,7 @@ def function_template(
     scripts = [] if not scripts else scripts
     styles = [] if not styles else styles
     body = fh.Div(
-        navbar,
+        render_navbar(function_id),
         main,
         style="display: grid; grid-template-columns: 150px 1fr; height: 100vh;",
     )
