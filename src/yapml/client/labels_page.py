@@ -170,6 +170,7 @@ def render_label_list_page(function_id: int, labels: list[Label]) -> FT:
             fh.Grid(
                 fh.Input({"type": "text", "name": "name", "placeholder": "Label name", "required": True}),
                 fh.Input({"type": "color", "name": "color", "value": "#FFFF00", "required": True}),
+                fh.Input({"type": "hidden", "name": "function_id", "value": function_id}),
                 fh.Button({"type": "submit"}, "Create Label"),
             ),
             action="/api/v1/labels-form",

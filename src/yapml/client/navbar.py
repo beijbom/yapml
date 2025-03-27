@@ -10,7 +10,7 @@ def render_navbar(function_id: int) -> FT:
             fh.Ul(
                 fh.Li(fh.A({"href": f"/functions/{function_id}/samples"}, "Samples")),
                 fh.Li(fh.A({"href": f"/functions/{function_id}/labels"}, "Labels")),
-                fh.Li(fh.A({"href": "/admin"}, "Admin")),
+                fh.Li(fh.A({"href": f"/functions/{function_id}/admin"}, "Admin")),
                 fh.Li(fh.A({"href": "/docs"}, "Docs")),
             ),
         ),

@@ -38,11 +38,11 @@ async def labels_page(request: Request, function_id: int) -> HTMLResponse:
     return HTMLResponse(fh.to_xml(page))
 
 
-@router.get("/samples/{sample_id}")
-async def sample_page(request: Request, sample_id: int) -> HTMLResponse:
+@router.get("/functions/{function_id}/samples/{sample_id}")
+async def sample_page(request: Request, function_id: int, sample_id: int) -> HTMLResponse:
     sample = await get_sample(request, sample_id)
     boxes = await list_boxes(request, sample_id=sample_id, include_deleted=True)
-    page = client.render_sample_details_page(sample, list(boxes))
+    page = client.render_sample_details_page(function_id, sample, list(boxes))
     return HTMLResponse(fh.to_xml(page))
 
 
@@ -57,6 +57,6 @@ async def favicon() -> FileResponse:
     return FileResponse(favicon_path)
 
 
-@router.get("/admin", response_class=HTMLResponse)
-async def admin_page() -> HTMLResponse:
-    return HTMLResponse(fh.to_xml(client.render_admin_page()))
+@router.get("/functions/{function_id}/admin", response_class=HTMLResponse)
+async def admin_page(request: Request, function_id: int) -> HTMLResponse:
+    return HTMLResponse(fh.to_xml(client.render_admin_page(function_id)))

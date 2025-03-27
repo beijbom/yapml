@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 """
 
 
-def render_admin_page() -> FT:
+def render_admin_page(function_id: int) -> FT:
     """
     Render the admin page with database management controls.
 
@@ -67,4 +67,9 @@ def render_admin_page() -> FT:
         style="padding: 2rem;",
     )
 
-    return function_template(main, "Admin - Yet Another ML Platform", scripts=[RESET_DB_SCRIPT])
+    return function_template(
+        main,
+        function_id,
+        "Admin - Yet Another ML Platform",
+        scripts=[RESET_DB_SCRIPT],
+    )
