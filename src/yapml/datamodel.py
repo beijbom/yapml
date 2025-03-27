@@ -45,7 +45,7 @@ class Label(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     function_id: int = Field(foreign_key="yapfunction.id")
     name: Annotated[str, AfterValidator(is_valid_label_name)] = Field(unique=True)
-    color: Annotated[str, AfterValidator(is_valid_hex_color)] = Field(unique=True)
+    color: Annotated[str, AfterValidator(is_valid_hex_color)]
     boxes: list["BoundingBox"] = Relationship(
         back_populates="label",
         sa_relationship_kwargs={

@@ -8,8 +8,9 @@ from yapml.utils import boxes_to_changes
 
 
 # Add JavaScript for drag and resize functionality
-def render_drag_script() -> str:
-    drag_script = """
+def render_drag_script(function_id: int) -> str:
+    drag_script = (
+        """
         console.log('Script loaded');
         let isDragging = false;
         let isResizing = false;
@@ -227,7 +228,9 @@ def render_drag_script() -> str:
 
         function updateLabelSelector() {
             const labelSelector = document.getElementById('label-selector');
-            fetch('/api/v1/labels')
+            fetch('"""
+        + f"/api/v1/labels?function_id={function_id}"
+        + """')
                 .then(response => response.json())
                 .then(labels => {
                     // Add a prompt option
@@ -417,7 +420,9 @@ def render_drag_script() -> str:
                     const normalizedHeight = boxDimensions.height / imageHeight;
                     
                     const payload = {
-                        sample_id: parseInt(sampleId),
+                        sample_id: parseInt(sampleId),"""
+        + f"function_id: {function_id},"
+        + """
                         label_id: parseInt(labelId),
                         center_x: centerX,
                         center_y: centerY,
@@ -468,6 +473,7 @@ def render_drag_script() -> str:
             initializeDrawing();
         });
         """
+    )
     return drag_script
 
 
@@ -618,7 +624,7 @@ def render_sample_list_page(function_id: int, samples: list[ObjectDetectionSampl
                     render_image_card(sample),
                     fh.A(
                         "Details →",
-                        href=f"/samples/{sample.id}",
+                        href=f"/functions/{function_id}/samples/{sample.id}",
                         style="display:block; text-align:left; margin-top:5px;",
                     ),
                 )
@@ -628,11 +634,15 @@ def render_sample_list_page(function_id: int, samples: list[ObjectDetectionSampl
         style="padding: 2rem;",
     )
     return function_template(
-        main, function_id, "Samples - Yet Another ML Platform", scripts=[render_drag_script()], styles=[DRAG_STYLE]
+        main,
+        function_id,
+        "Samples - Yet Another ML Platform",
+        scripts=[render_drag_script(function_id)],
+        styles=[DRAG_STYLE],
     )
 
 
-def render_sample_details_page(sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> FT:
+def render_sample_details_page(function_id: int, sample: ObjectDetectionSample, boxes: list[BoundingBox]) -> FT:
     assert sample.id is not None
     history = render_sample_history(boxes, sample.id)
     card = render_image_card(sample)
@@ -645,4 +655,10 @@ def render_sample_details_page(sample: ObjectDetectionSample, boxes: list[Boundi
         ),
         style="padding: 2rem;",
     )
-    return function_template(main, "Sample details", scripts=[render_drag_script()], styles=[DRAG_STYLE])
+    return function_template(
+        main,
+        function_id,
+        "Sample details",
+        scripts=[render_drag_script(function_id)],
+        styles=[DRAG_STYLE],
+    )
