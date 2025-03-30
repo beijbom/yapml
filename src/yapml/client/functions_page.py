@@ -1,7 +1,7 @@
 import fasthtml.common as fh
 from fasthtml.common import FT
 
-from yapml.client.page_templates import function_template
+from yapml.client.page_templates import console_template
 from yapml.client.styles import yapml_gray_color
 from yapml.datamodel import YapFunction
 
@@ -137,7 +137,7 @@ def render_function_list_page(functions: list[YapFunction]) -> FT:
     """
 
     main = fh.Main(
-        fh.H1("Functions"),
+        fh.H1("Yet Another ML Platform"),
         fh.Form(
             fh.Grid(
                 fh.Input({"type": "text", "name": "name", "placeholder": "Function name", "required": True}),
@@ -189,4 +189,4 @@ def render_function_list_page(functions: list[YapFunction]) -> FT:
         ),
         style="padding: 2rem;",
     )
-    return function_template(main, 1, "Functions - Yet Another ML Platform", [FUNCTION_SCRIPT])
+    return console_template(main, "Yet Another ML Platform", [FUNCTION_SCRIPT])

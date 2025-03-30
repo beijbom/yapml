@@ -8,6 +8,7 @@ def render_navbar(function_id: int) -> FT:
     navbar = fh.Aside(
         fh.Nav(
             fh.Ul(
+                fh.Li(fh.A({"href": "/"}, "<- Home")),
                 fh.Li(fh.A({"href": f"/functions/{function_id}/samples"}, "Samples")),
                 fh.Li(fh.A({"href": f"/functions/{function_id}/labels"}, "Labels")),
                 fh.Li(fh.A({"href": f"/functions/{function_id}/admin"}, "Admin")),
