@@ -189,4 +189,4 @@ def render_function_list_page(functions: list[YapFunction]) -> FT:
         ),
         style="padding: 2rem;",
     )
-    return function_template(main, "Functions - Yet Another ML Platform", [FUNCTION_SCRIPT])
+    return function_template(main, 1, "Functions - Yet Another ML Platform", [FUNCTION_SCRIPT])
