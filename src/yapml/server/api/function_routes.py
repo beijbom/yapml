@@ -6,7 +6,7 @@ from sqlmodel import select
 from yapml.datamodel import FunctionType, YapFunction
 from yapml.db import get_session
 
-router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
+router = APIRouter(prefix="/api/detection", dependencies=[Depends(get_session)], tags=["Functions"])
 
 
 def validate_function(function: YapFunction) -> YapFunction:

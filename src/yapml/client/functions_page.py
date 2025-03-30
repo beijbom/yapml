@@ -10,7 +10,7 @@ FUNCTION_SCRIPT = """
 document.addEventListener('DOMContentLoaded', function() {
     // Function to update function
     function updateFunction(functionId, updateData) {
-        fetch(`/api/v1/functions/${functionId}`, {
+        fetch(`/api/detection/functions/${functionId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch(`/api/v1/functions/${functionId}`, {
+        fetch(`/api/detection/functions/${functionId}`, {
             method: 'DELETE',
         })
         .then(response => {
@@ -144,7 +144,7 @@ def render_function_list_page(functions: list[YapFunction]) -> FT:
                 fh.Input({"type": "text", "name": "description", "placeholder": "Function description"}),
                 fh.Button({"type": "submit"}, "Create Function"),
             ),
-            action="/api/v1/functions-form",
+            action="/api/detection/functions-form",
             method="post",
             enctype="application/x-www-form-urlencoded",
         ),

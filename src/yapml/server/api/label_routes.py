@@ -8,7 +8,7 @@ from sqlmodel import select
 from yapml.datamodel import BoundingBox, Label
 from yapml.db import get_session
 
-router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
+router = APIRouter(prefix="/api/detection", dependencies=[Depends(get_session)], tags=["Object Detection Labels"])
 
 
 def validate_label(label: Label) -> Label:

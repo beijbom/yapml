@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 from yapml.db import engine, get_session
 from yapml.fixtures import populate_db
 
-router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
+router = APIRouter(prefix="/api/detection", dependencies=[Depends(get_session)], tags=["Admin"])
 
 
 @router.post("/reset-db")

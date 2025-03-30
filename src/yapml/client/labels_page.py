@@ -10,7 +10,7 @@ COLOR_CHANGE_SCRIPT = """
 document.addEventListener('DOMContentLoaded', function() {
     // Function to update label
     function updateLabel(labelId, updateData) {
-        fetch(`/api/v1/labels/${labelId}`, {
+        fetch(`/api/detection/labels/${labelId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch(`/api/v1/labels/${labelId}`, {
+        fetch(`/api/detection/labels/${labelId}`, {
             method: 'DELETE',
         })
         .then(response => {
@@ -173,7 +173,7 @@ def render_label_list_page(function_id: int, labels: list[Label]) -> FT:
                 fh.Input({"type": "hidden", "name": "function_id", "value": function_id}),
                 fh.Button({"type": "submit"}, "Create Label"),
             ),
-            action="/api/v1/labels-form",
+            action="/api/detection/labels-form",
             method="post",
             enctype="application/x-www-form-urlencoded",
         ),

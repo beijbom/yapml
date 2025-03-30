@@ -173,7 +173,7 @@ def render_drag_script(function_id: int) -> str:
             const height = currentBox.offsetHeight / imageHeight;
             
             try {
-                const response = await fetch(`/api/v1/boxes/${boxId}`, {
+                const response = await fetch(`/api/detection/boxes/${boxId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

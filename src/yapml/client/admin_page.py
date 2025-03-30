@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch('/api/v1/reset-db', {
+        fetch('/api/admin/reset-db', {
             method: 'POST',
         })
         .then(response => response.json())

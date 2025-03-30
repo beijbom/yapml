@@ -10,7 +10,7 @@ from yapml.datamodel import ObjectDetectionSample
 from yapml.db import get_session
 from yapml.image_processing import ImageDecoder
 
-router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_session)])
+router = APIRouter(prefix="/api/detection", dependencies=[Depends(get_session)], tags=["Object Detection Samples"])
 
 
 def validate_sample(sample: ObjectDetectionSample) -> ObjectDetectionSample:

@@ -30,7 +30,7 @@ def sample_fixture(test_session, function_fixture):
 
 def test_get_sample(client, sample_fixture):
     """Test getting a sample by ID"""
-    response = client.get(f"/api/v1/samples/{sample_fixture.id}")
+    response = client.get(f"/api/detection/samples/{sample_fixture.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == sample_fixture.id
@@ -42,7 +42,7 @@ def test_get_sample(client, sample_fixture):
 
 def test_list_samples(client, sample_fixture):
     """Test listing all samples"""
-    response = client.get("/api/v1/samples")
+    response = client.get("/api/detection/samples")
     assert response.status_code == 200
     samples = response.json()
     assert isinstance(samples, list)  # Ensure the response is a list
@@ -80,7 +80,7 @@ class TestSamplePost:
             "height": 100,
             "function_id": function_fixture.id,
         }
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 200
         data = response.json()
         assert data["width"] == sample_data["width"]
@@ -94,7 +94,7 @@ class TestSamplePost:
         _, data_uri = self.create_test_image(width, height)
 
         sample_data = {"url": data_uri, "width": width, "height": height, "function_id": function_fixture.id}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 200
         data = response.json()
         assert data["width"] == width
@@ -108,7 +108,7 @@ class TestSamplePost:
         _, data_uri = self.create_test_image(width, height)
 
         sample_data = {"url": data_uri, "width": 200, "height": 100, "function_id": function_fixture.id}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 422
         assert "width" in response.json()["detail"]
 
@@ -118,7 +118,7 @@ class TestSamplePost:
         _, data_uri = self.create_test_image(width, height)
 
         sample_data = {"url": data_uri, "width": 100, "height": 200}  # Wrong dimensions
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 422
         assert "height" in response.json()["detail"]
 
@@ -129,52 +129,52 @@ class TestSamplePost:
 
         sample_data = {"url": data_uri, "width": width, "height": height, "function_id": function_fixture.id}
         # First creation should succeed
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 200
 
         # Second creation should fail
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 409
         assert "Image already exists in database" in response.json()["detail"]
 
     def test_create_sample_invalid_dimensions_negative(self, client):
         """Test creating a sample with negative dimensions"""
         sample_data = {"url": "https://picsum.photos/100.jpg", "width": -100, "height": -100}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 422
         assert "width" in response.json()["detail"]
 
     def test_create_sample_invalid_dimensions_zero(self, client):
         """Test creating a sample with zero dimensions"""
         sample_data = {"url": "https://picsum.photos/100.jpg", "width": 0, "height": 0}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 422
         assert "width" in response.json()["detail"]
 
     def test_create_sample_only_url(self, client, function_fixture):
         """Test creating a sample with missing required fields"""
         sample_data = {"url": f"https://picsum.photos/100.jpg", "function_id": function_fixture.id}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 200
 
     def test_create_sample_invalid_url(self, client):
         """Test creating a sample with an invalid URL"""
         sample_data = {"url": "not_a_valid_url", "width": 100, "height": 100}
-        response = client.post("/api/v1/samples", json=sample_data)
+        response = client.post("/api/detection/samples", json=sample_data)
         assert response.status_code == 422
 
 
 def test_delete_sample(client, sample_fixture):
     """Test deleting a sample"""
-    response = client.delete(f"/api/v1/samples/{sample_fixture.id}")
+    response = client.delete(f"/api/detection/samples/{sample_fixture.id}")
     assert response.status_code == 204
 
     # Verify sample is deleted
-    response = client.get(f"/api/v1/samples/{sample_fixture.id}")
+    response = client.get(f"/api/detection/samples/{sample_fixture.id}")
     assert response.status_code == 404  # Sample should not be found
 
 
 def test_delete_sample_not_found(client):
     """Test deleting a non-existent sample"""
-    response = client.delete("/api/v1/samples/999")
+    response = client.delete("/api/detection/samples/999")
     assert response.status_code == 404

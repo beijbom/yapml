@@ -21,7 +21,7 @@ web_app.include_router(function_router)
 web_app.include_router(ui_router)
 
 
-@web_app.get("/sitemap.xml", response_class=Response)
+@web_app.get("/sitemap.xml", response_class=Response, include_in_schema=False)
 async def sitemap():
     # Get base URL from environment or config
     base_url = "https://yourdomain.com"  # Replace with your domain

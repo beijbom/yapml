@@ -50,7 +50,7 @@ def box_fixture(test_session):
 
 def test_get_box(client, box_fixture):
     """Test getting a box by ID"""
-    response = client.get(f"/api/v1/boxes/{box_fixture.id}")
+    response = client.get(f"/api/detection/boxes/{box_fixture.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == box_fixture.id
@@ -63,7 +63,7 @@ def test_get_box(client, box_fixture):
 
 def test_list_boxes(client, box_fixture):
     """Test listing all boxes"""
-    response = client.get("/api/v1/boxes")
+    response = client.get("/api/detection/boxes")
     assert response.status_code == 200
     boxes = response.json()
     assert isinstance(boxes, list)  # Ensure the response is a list
@@ -81,7 +81,7 @@ def test_update_box(client, box_fixture):
     """Test updating a box"""
     update_data = {"center_x": 0.5, "center_y": 0.6, "width": 0.2, "height": 0.3}
 
-    response = client.put(f"/api/v1/boxes/{box_fixture.id}", json=update_data)
+    response = client.put(f"/api/detection/boxes/{box_fixture.id}", json=update_data)
     assert response.status_code == 200
 
     data = response.json()
@@ -94,7 +94,7 @@ def test_update_box(client, box_fixture):
 
 def test_update_box_too_large(client, box_fixture):
     update_data = {"center_x": 1.1}
-    response = client.put(f"/api/v1/boxes/{box_fixture.id}", json=update_data)
+    response = client.put(f"/api/detection/boxes/{box_fixture.id}", json=update_data)
     assert response.status_code == 422
 
 
@@ -109,7 +109,7 @@ def test_create_box(client, test_session, box_fixture):
         "height": 0.1,
         "annotator_name": "Alice",
     }
-    response = client.post("/api/v1/boxes", json=body)
+    response = client.post("/api/detection/boxes", json=body)
     assert response.status_code == 200
 
 
@@ -124,7 +124,7 @@ def test_create_box_too_large(client, test_session, box_fixture):
         "height": 0.1,
         "annotator_name": "Alice",
     }
-    response = client.post("/api/v1/boxes", json=body)
+    response = client.post("/api/detection/boxes", json=body)
     assert response.status_code == 422
 
 
@@ -139,12 +139,12 @@ def test_box_too_small(client, test_session, box_fixture):
         "height": 0.0,
         "annotator_name": "Alice",
     }
-    response = client.post("/api/v1/boxes", json=body)
+    response = client.post("/api/detection/boxes", json=body)
     assert response.status_code == 422
 
 
 def test_delete_box(client, box_fixture):
-    response = client.delete(f"/api/v1/boxes/{box_fixture.id}")
+    response = client.delete(f"/api/detection/boxes/{box_fixture.id}")
     assert response.status_code == 204
 
 
