@@ -229,7 +229,7 @@ def render_drag_script(function_id: int) -> str:
         function updateLabelSelector() {
             const labelSelector = document.getElementById('label-selector');
             fetch('"""
-        + f"/api/v1/labels?function_id={function_id}"
+        + f"/api/detection/labels?function_id={function_id}"
         + """')
                 .then(response => response.json())
                 .then(labels => {
@@ -435,7 +435,7 @@ def render_drag_script(function_id: int) -> str:
                     
                     // Create the box
                     try {
-                        const response = await fetch('/api/v1/boxes', {
+                        const response = await fetch('/api/detection/boxes', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
